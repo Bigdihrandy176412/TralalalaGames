@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Planet Clicker</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: #030712;
+      color: #f8fafc;
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: #080d1a;
+      border-bottom: 1px solid #1e293b;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: #38bdf8;
+    }
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .header-btn {
+      background: #0f172a;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .header-btn:hover { background: #1e293b; color: #fff; }
+
+    /* Layout */
+    .game-container {
+      display: grid;
+      grid-template-columns: 1fr 350px;
+      flex: 1;
+      height: calc(100vh - 53px);
+      overflow: hidden;
+    }
+    @media (max-width: 860px) {
+      .game-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        height: auto;
+        overflow: visible;
+      }
+    }
+
+    /* Left Planet Stage */
+    .planet-stage {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      background: radial-gradient(circle at center, #0c1527 0%, #030712 85%);
+      overflow: hidden;
+    }
+
+    /* Starfield canvas background */
+    #spaceCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .planet-hud {
+      text-align: center;
+      margin-bottom: 20px;
+      z-index: 2;
+    }
+    .energy-count {
+      font-size: 2.6rem;
+      font-weight: 900;
+      color: #38bdf8;
+      letter-spacing: -0.5px;
+      font-family: monospace;
+      text-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+    }
+    .energy-eps {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      margin-top: 4px;
+      font-weight: 600;
+    }
+    .flare-badge {
+      display: inline-block;
+      margin-top: 8px;
+      background: #0369a1;
+      color: #bae6fd;
+      border: 1px solid #38bdf8;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      animation: pulseFlare 1s infinite alternate;
+    }
+    @keyframes pulseFlare {
+      from { transform: scale(0.98); opacity: 0.85; }
+      to { transform: scale(1.04); opacity: 1; }
+    }
+
+    /* Planet Canvas Container */
+    .planet-viewport {
+      position: relative;
+      width: 240px;
+      height: 240px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+      transition: transform 0.08s ease-out;
+    }
+    .planet-viewport:hover {
+      transform: scale(1.03);
+    }
+    .planet-viewport:active {
+      transform: scale(0.94);
+    }
+
+    #planetCanvas {
+      border-radius: 50%;
+      box-shadow: 0 0 45px rgba(56, 189, 248, 0.35);
+    }
+
+    /* Floating energy number */
+    .float-num {
+      position: absolute;
+      color: #38bdf8;
+      font-family: monospace;
+      font-weight: 900;
+      font-size: 1.2rem;
+      pointer-events: none;
+      animation: floatUp 0.8s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+      z-index: 20;
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+    }
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-70px) scale(1.2); }
+    }
+
+    /* Shooting Star / Meteor */
+    .meteor {
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #fff, #facc15 40%, #ea580c 100%);
+      box-shadow: 0 0 20px #f97316, 0 0 40px #facc15;
+      cursor: pointer;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    /* Planet Switcher Bar */
+    .planet-nav {
+      display: flex;
+      gap: 8px;
+      margin-top: 24px;
+      z-index: 4;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(8px);
+      padding: 6px 10px;
+      border-radius: 30px;
+      border: 1px solid #1e293b;
+    }
+    .planet-tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .planet-tab.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #38bdf8;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+    }
+    .planet-tab.locked {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Right Installations Column */
+    .shop-column {
+      background: #080d1a;
+      border-left: 1px solid #1e293b;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .shop-header {
+      padding: 12px 16px;
+      background: #0f172a;
+      border-bottom: 1px solid #1e293b;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .installations-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .install-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: #0e1626;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .install-row:hover:not(.disabled) {
+      background: #172554;
+      border-color: #38bdf8;
+      transform: translateX(2px);
+    }
+    .install-row.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .ins-icon {
+      font-size: 1.8rem;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #030712;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
+      flex-shrink: 0;
+    }
+    .ins-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .ins-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #f8fafc;
+      display: flex;
+      justify-content: space-between;
+    }
+    .ins-cost {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #38bdf8;
+      font-family: monospace;
+      margin-top: 2px;
+    }
+    .ins-count {
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: #64748b;
+      font-family: monospace;
+    }
+    .ins-eps {
+      font-size: 0.7rem;
+      color: #94a3b8;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+    .modal-box {
+      background: #0b1324;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 20px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+    }
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #f8fafc;
+      margin-bottom: 12px;
+    }
+    .modal-stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #1e293b;
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+    .modal-stat strong {
+      color: #f8fafc;
+      font-family: monospace;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-secondary { background: #1e293b; color: #fff; }
+    .btn-danger { background: #ef4444; color: #fff; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span>🪐</span>
+      <span>PLANET CLICKER</span>
+    </div>
+    <div class="header-actions">
+      <button class="header-btn" id="statsBtn">📊 Stats</button>
+      <button class="header-btn" id="saveBtn">💾 Save</button>
+      <button class="header-btn" id="resetBtn" style="color: #ef4444;">Reset</button>
+    </div>
+  </header>
+
+  <div class="game-container">
+    <!-- Left Planet Stage -->
+    <div class="planet-stage" id="planetStage">
+      <canvas id="spaceCanvas"></canvas>
+
+      <div class="planet-hud">
+        <div class="energy-count" id="energyDisplay">0</div>
+        <div class="energy-eps" id="epsDisplay">energy per second: 0.0</div>
+        <div id="flareDisplay" class="flare-badge hidden">🔥 SOLAR FLARE 10x!</div>
+      </div>
+
+      <div class="planet-viewport" id="planetViewport">
+        <canvas id="planetCanvas" width="220" height="220"></canvas>
+      </div>
+
+      <div class="planet-nav" id="planetNav">
+        <!-- Planet buttons rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- Right Installations Column -->
+    <div class="shop-column">
+      <div class="shop-header">
+        <span>Installations &amp; Satellites</span>
+        <span id="totalUnitsCount" style="color: #38bdf8;">0 Units</span>
+      </div>
+      <div class="installations-list" id="installationsList">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Modal -->
+  <div id="statsModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-title">Galactic Harvest Statistics</div>
+      <div class="modal-stat"><span>Current Energy Bank:</span> <strong id="statBank">0</strong></div>
+      <div class="modal-stat"><span>Total Energy Harvested:</span> <strong id="statTotal">0</strong></div>
+      <div class="modal-stat"><span>Energy Per Second (EPS):</span> <strong id="statEps">0</strong></div>
+      <div class="modal-stat"><span>Energy Per Click:</span> <strong id="statEpc">1</strong></div>
+      <div class="modal-stat"><span>Planet Clicks:</span> <strong id="statClicks">0</strong></div>
+      <div class="modal-stat"><span>Meteors Intercepted:</span> <strong id="statMeteors">0</strong></div>
+      <div class="modal-stat"><span>Current Planet:</span> <strong id="statPlanet">Earth</strong></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="closeStatsBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset Modal -->
+  <div id="resetModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-title" style="color: #ef4444;">Wipe Galactic Save?</div>
+      <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5; margin-bottom: 16px;">
+        Are you sure you want to reset all energy, installations, and unlocked planets?
+      </p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="cancelResetBtn">Cancel</button>
+        <button class="btn btn-danger" id="confirmResetBtn">Yes, Wipe Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Audio SFX synthesized via Web Audio API
+    let audioCtx = null;
+    function playLaserSound(freq, duration = 0.08) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + duration);
+        gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function playBuySound() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.12);
+      } catch (e) {}
+    }
+
+    // Planets catalog
+    const PLANETS_DEF = [
+      { id: 'earth', name: 'Earth', icon: '🌍', unlockCost: 0, mult: 1, baseColor: '#0284c7', landColor: '#10b981', ring: false },
+      { id: 'moon', name: 'Moon', icon: '🌑', unlockCost: 20000, mult: 2.5, baseColor: '#64748b', landColor: '#94a3b8', ring: false },
+      { id: 'mars', name: 'Mars', icon: '🔴', unlockCost: 350000, mult: 6, baseColor: '#c2410c', landColor: '#ea580c', ring: false },
+      { id: 'jupiter', name: 'Jupiter', icon: '🪐', unlockCost: 8000000, mult: 18, baseColor: '#d97706', landColor: '#b45309', ring: true },
+      { id: 'sun', name: 'The Sun', icon: '☀️', unlockCost: 150000000, mult: 60, baseColor: '#eab308', landColor: '#f97316', ring: false }
+    ];
+
+    // Installations catalog
+    const INSTALLATIONS_DEF = [
+      { id: 'solar', name: 'Solar Panels', icon: '☀️', baseCost: 20, baseEps: 1, desc: 'Generates photovoltaic clean energy.' },
+      { id: 'wind', name: 'Wind Turbines', icon: '🌀', baseCost: 120, baseEps: 5, desc: 'Harvests surface atmospheric storms.' },
+      { id: 'geo', name: 'Geothermal Core', icon: '🌋', baseCost: 1200, baseEps: 32, desc: 'Taps molten mantle heat.' },
+      { id: 'elevator', name: 'Space Elevator', icon: '🏗️', baseCost: 14000, baseEps: 210, desc: 'Beams solar energy directly from orbit.' },
+      { id: 'satellites', name: 'Orbital Array', icon: '🛰️', baseCost: 160000, baseEps: 1400, desc: 'Concentrated microwave beam emitters.' },
+      { id: 'lunar_col', name: 'Lunar Harvesters', icon: '🚀', baseCost: 1800000, baseEps: 9200, desc: 'Helium-3 nuclear fusion generators.' },
+      { id: 'dyson', name: 'Dyson Swarm', icon: '🌐', baseCost: 24000000, baseEps: 65000, desc: 'Encapsulates the star with energy collectors.' },
+      { id: 'antimatter', name: 'Dark Matter Reactor', icon: '⚛️', baseCost: 350000000, baseEps: 450000, desc: 'Direct matter-to-energy conversion.' }
+    ];
+
+    // State
+    let energy = 0;
+    let totalHarvested = 0;
+    let planetClicks = 0;
+    let meteorsCaught = 0;
+    let currentPlanetId = 'earth';
+    let unlockedPlanets = { earth: true };
+    let installations = {};
+    let activeFlareTimer = 0;
+    let activeFlareMult = 1;
+
+    INSTALLATIONS_DEF.forEach(i => installations[i.id] = 0);
+
+    // Number formatting
+    function formatNumber(num) {
+      if (num < 1000) return Math.floor(num).toLocaleString();
+      const suffixes = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx'];
+      const i = Math.floor(Math.log10(Math.max(1, num)) / 3);
+      if (i < suffixes.length) {
+        return (num / Math.pow(10, i * 3)).toFixed(i > 0 ? 2 : 0) + suffixes[i];
+      }
+      return num.toExponential(2);
+    }
+
+    function getCurrentPlanet() {
+      return PLANETS_DEF.find(p => p.id === currentPlanetId) || PLANETS_DEF[0];
+    }
+
+    function getInstallationCost(insDef) {
+      const count = installations[insDef.id] || 0;
+      return Math.floor(insDef.baseCost * Math.pow(1.15, count));
+    }
+
+    function getEpc() {
+      const p = getCurrentPlanet();
+      return Math.max(1, Math.floor(p.mult * (1 + getEps() * 0.02) * activeFlareMult));
+    }
+
+    function getEps() {
+      let total = 0;
+      INSTALLATIONS_DEF.forEach(ins => {
+        const count = installations[ins.id] || 0;
+        total += count * ins.baseEps;
+      });
+      const p = getCurrentPlanet();
+      total *= p.mult;
+      total *= activeFlareMult;
+      return total;
+    }
+
+    // DOM Elements
+    const energyDisplay = document.getElementById('energyDisplay');
+    const epsDisplay = document.getElementById('epsDisplay');
+    const flareDisplay = document.getElementById('flareDisplay');
+    const planetStage = document.getElementById('planetStage');
+    const planetViewport = document.getElementById('planetViewport');
+    const planetNav = document.getElementById('planetNav');
+    const installationsList = document.getElementById('installationsList');
+    const totalUnitsCount = document.getElementById('totalUnitsCount');
+    const planetCanvas = document.getElementById('planetCanvas');
+    const planetCtx = planetCanvas.getContext('2d');
+    const spaceCanvas = document.getElementById('spaceCanvas');
+    const spaceCtx = spaceCanvas.getContext('2d');
+
+    // Modals
+    const statsModal = document.getElementById('statsModal');
+    const resetModal = document.getElementById('resetModal');
+
+    // Space Background Canvas Resize & Render
+    let stars = [];
+    function initStars() {
+      const w = spaceCanvas.width = planetStage.clientWidth;
+      const h = spaceCanvas.height = planetStage.clientHeight;
+      stars = [];
+      for (let i = 0; i < 70; i++) {
+        stars.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          radius: Math.random() * 1.5 + 0.5,
+          alpha: Math.random() * 0.8 + 0.2,
+          speed: Math.random() * 0.02 + 0.005
+        });
+      }
+    }
+    window.addEventListener('resize', initStars);
+
+    function drawStars() {
+      spaceCtx.clearRect(0, 0, spaceCanvas.width, spaceCanvas.height);
+      stars.forEach(s => {
+        s.alpha += s.speed;
+        if (s.alpha > 1 || s.alpha < 0.2) s.speed = -s.speed;
+        spaceCtx.beginPath();
+        spaceCtx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+        spaceCtx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, Math.min(1, s.alpha))})`;
+        spaceCtx.fill();
+      });
+    }
+
+    // Rotating 2D/3D Planet on Canvas
+    let planetRotation = 0;
+    function drawPlanet() {
+      const p = getCurrentPlanet();
+      const w = planetCanvas.width;
+      const h = planetCanvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = 90;
+
+      planetCtx.clearRect(0, 0, w, h);
+
+      // Back half of planetary ring
+      if (p.ring) {
+        planetCtx.save();
+        planetCtx.translate(cx, cy);
+        planetCtx.rotate(-0.3);
+        planetCtx.beginPath();
+        planetCtx.ellipse(0, 0, 125, 28, 0, Math.PI, Math.PI * 2);
+        planetCtx.strokeStyle = 'rgba(251, 191, 36, 0.4)';
+        planetCtx.lineWidth = 12;
+        planetCtx.stroke();
+        planetCtx.restore();
+      }
+
+      // Planet Sphere Base
+      planetCtx.save();
+      planetCtx.beginPath();
+      planetCtx.arc(cx, cy, r, 0, Math.PI * 2);
+      planetCtx.clip();
+
+      // Deep Sphere Color Gradient
+      const grad = planetCtx.createRadialGradient(cx - 30, cy - 30, 10, cx, cy, r);
+      grad.addColorStop(0, '#ffffff');
+      grad.addColorStop(0.3, p.baseColor);
+      grad.addColorStop(0.9, '#030712');
+      planetCtx.fillStyle = grad;
+      planetCtx.fillRect(0, 0, w, h);
+
+      // Procedural moving terrain/craters across planet surface
+      planetCtx.fillStyle = p.landColor;
+      planetCtx.globalAlpha = 0.55;
+      for (let i = -1; i < 4; i++) {
+        const xOffset = ((planetRotation * 40 + i * 90) % (r * 2.8)) - r * 1.4;
+        planetCtx.beginPath();
+        planetCtx.arc(cx + xOffset, cy - 25, 22, 0, Math.PI * 2);
+        planetCtx.arc(cx + xOffset + 30, cy + 20, 28, 0, Math.PI * 2);
+        planetCtx.arc(cx + xOffset - 25, cy + 35, 18, 0, Math.PI * 2);
+        planetCtx.fill();
+      }
+
+      // Shading / Dark Side Crescent
+      planetCtx.globalAlpha = 0.5;
+      planetCtx.fillStyle = '#020617';
+      planetCtx.beginPath();
+      planetCtx.arc(cx + 25, cy + 25, r * 1.05, 0, Math.PI * 2);
+      planetCtx.fill();
+
+      planetCtx.restore();
+
+      // Front half of planetary ring
+      if (p.ring) {
+        planetCtx.save();
+        planetCtx.translate(cx, cy);
+        planetCtx.rotate(-0.3);
+        planetCtx.beginPath();
+        planetCtx.ellipse(0, 0, 125, 28, 0, 0, Math.PI);
+        planetCtx.strokeStyle = 'rgba(251, 191, 36, 0.85)';
+        planetCtx.lineWidth = 12;
+        planetCtx.stroke();
+        planetCtx.restore();
+      }
+
+      // Outer Atmosphere Glow Ring
+      planetCtx.beginPath();
+      planetCtx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+      planetCtx.strokeStyle = p.baseColor;
+      planetCtx.lineWidth = 3;
+      planetCtx.stroke();
+    }
+
+    // Click Planet Handler
+    function clickPlanet(e) {
+      playLaserSound(360);
+      const gain = getEpc();
+      energy += gain;
+      totalHarvested += gain;
+      planetClicks++;
+
+      // Create floating energy indicator
+      const stageRect = planetStage.getBoundingClientRect();
+      const vpRect = planetViewport.getBoundingClientRect();
+      const clientX = e.clientX || (vpRect.left + vpRect.width / 2);
+      const clientY = e.clientY || (vpRect.top + vpRect.height / 2);
+
+      const floatEl = document.createElement('div');
+      floatEl.className = 'float-num';
+      floatEl.innerText = `+${formatNumber(gain)}`;
+      floatEl.style.left = `${clientX - stageRect.left - 20}px`;
+      floatEl.style.top = `${clientY - stageRect.top - 20}px`;
+      planetStage.appendChild(floatEl);
+      setTimeout(() => floatEl.remove(), 800);
+
+      updateUI();
+    }
+
+    planetViewport.addEventListener('pointerdown', clickPlanet);
+
+    // Render Planet Switcher Tabs
+    function renderPlanetTabs() {
+      planetNav.innerHTML = '';
+      PLANETS_DEF.forEach(p => {
+        const isUnlocked = unlockedPlanets[p.id] || p.unlockCost === 0;
+        const isActive = p.id === currentPlanetId;
+        const btn = document.createElement('button');
+        btn.className = `planet-tab ${isActive ? 'active' : ''} ${isUnlocked ? '' : 'locked'}`;
+        btn.innerHTML = `${p.icon} <span>${p.name}</span> ${!isUnlocked ? `(🔒 ${formatNumber(p.unlockCost)})` : ''}`;
+
+        btn.addEventListener('click', () => {
+          if (isUnlocked) {
+            currentPlanetId = p.id;
+            renderPlanetTabs();
+            updateUI();
+          } else if (energy >= p.unlockCost) {
+            energy -= p.unlockCost;
+            unlockedPlanets[p.id] = true;
+            currentPlanetId = p.id;
+            playBuySound();
+            renderPlanetTabs();
+            updateUI();
+          } else {
+            alert(`Need ${formatNumber(p.unlockCost)} Energy to colonize ${p.name}!`);
+          }
+        });
+
+        planetNav.appendChild(btn);
+      });
+    }
+
+    // Render Installations
+    function renderInstallations() {
+      installationsList.innerHTML = '';
+      let totalUnits = 0;
+
+      INSTALLATIONS_DEF.forEach(ins => {
+        const count = installations[ins.id] || 0;
+        totalUnits += count;
+        const cost = getInstallationCost(ins);
+        const canAfford = energy >= cost;
+
+        const row = document.createElement('div');
+        row.className = `install-row ${canAfford ? '' : 'disabled'}`;
+        row.innerHTML = `
+          <div class="ins-icon">${ins.icon}</div>
+          <div class="ins-info">
+            <div class="ins-name">
+              <span>${ins.name}</span>
+              <span class="ins-count">${count}</span>
+            </div>
+            <div class="ins-cost">⚡ ${formatNumber(cost)}</div>
+            <div class="ins-eps">+${formatNumber(ins.baseEps * getCurrentPlanet().mult)}/s</div>
+          </div>
+        `;
+
+        row.addEventListener('click', () => {
+          if (energy >= cost) {
+            energy -= cost;
+            installations[ins.id] = (installations[ins.id] || 0) + 1;
+            playBuySound();
+            updateUI();
+          }
+        });
+
+        installationsList.appendChild(row);
+      });
+
+      totalUnitsCount.innerText = `${totalUnits} Units`;
+    }
+
+    // Falling Meteor Spawner
+    function spawnMeteor() {
+      const existing = document.querySelector('.meteor');
+      if (existing) return;
+
+      const meteor = document.createElement('div');
+      meteor.className = 'meteor';
+      meteor.innerText = '☄️';
+      const stageRect = planetStage.getBoundingClientRect();
+      const startX = Math.random() * (stageRect.width - 80) + 30;
+      const startY = Math.random() * (stageRect.height - 120) + 40;
+      meteor.style.left = `${startX}px`;
+      meteor.style.top = `${startY}px`;
+
+      meteor.addEventListener('click', (e) => {
+        e.stopPropagation();
+        meteorsCaught++;
+        playBuySound();
+
+        // 10x Solar Flare for 15s
+        activeFlareMult = 10;
+        activeFlareTimer = 15;
+        flareDisplay.classList.remove('hidden');
+        flareDisplay.innerText = '🔥 SOLAR FLARE! 10x EPS (15s)';
+
+        meteor.remove();
+        updateUI();
+      });
+
+      planetStage.appendChild(meteor);
+
+      // Auto remove after 10s
+      setTimeout(() => {
+        if (meteor.parentNode) meteor.remove();
+      }, 10000);
+    }
+
+    setInterval(spawnMeteor, 45000);
+
+    // Main Update Loop
+    let lastTime = performance.now();
+    function tick(now) {
+      const delta = (now - lastTime) / 1000;
+      lastTime = now;
+
+      planetRotation += delta * 0.3;
+
+      // Idle Generation
+      const currentEps = getEps();
+      if (currentEps > 0) {
+        const generated = currentEps * delta;
+        energy += generated;
+        totalHarvested += generated;
+      }
+
+      // Flare countdown
+      if (activeFlareTimer > 0) {
+        activeFlareTimer -= delta;
+        flareDisplay.innerText = `🔥 SOLAR FLARE! 10x EPS (${Math.ceil(activeFlareTimer)}s)`;
+        if (activeFlareTimer <= 0) {
+          activeFlareMult = 1;
+          flareDisplay.classList.add('hidden');
+        }
+      }
+
+      drawStars();
+      drawPlanet();
+      updateUI();
+      requestAnimationFrame(tick);
+    }
+
+    function updateUI() {
+      energyDisplay.innerText = formatNumber(Math.floor(energy));
+      epsDisplay.innerText = `energy per second: ${formatNumber(getEps())}`;
+      renderInstallations();
+    }
+
+    // Save & Load
+    function saveGame() {
+      const data = {
+        energy,
+        totalHarvested,
+        planetClicks,
+        meteorsCaught,
+        currentPlanetId,
+        unlockedPlanets,
+        installations,
+        savedAt: Date.now()
+      };
+      localStorage.setItem('planet_clicker_save', JSON.stringify(data));
+    }
+
+    function loadGame() {
+      try {
+        const raw = localStorage.getItem('planet_clicker_save');
+        if (!raw) return;
+        const d = JSON.parse(raw);
+        energy = d.energy || 0;
+        totalHarvested = d.totalHarvested || 0;
+        planetClicks = d.planetClicks || 0;
+        meteorsCaught = d.meteorsCaught || 0;
+        currentPlanetId = d.currentPlanetId || 'earth';
+        if (d.unlockedPlanets) Object.assign(unlockedPlanets, d.unlockedPlanets);
+        if (d.installations) Object.assign(installations, d.installations);
+      } catch (e) {
+        console.warn('Could not load planet clicker save', e);
+      }
+    }
+
+    setInterval(saveGame, 3000);
+
+    // Header buttons
+    document.getElementById('statsBtn').addEventListener('click', () => {
+      document.getElementById('statBank').innerText = formatNumber(Math.floor(energy));
+      document.getElementById('statTotal').innerText = formatNumber(Math.floor(totalHarvested));
+      document.getElementById('statEps').innerText = formatNumber(getEps());
+      document.getElementById('statEpc').innerText = formatNumber(getEpc());
+      document.getElementById('statClicks').innerText = planetClicks.toLocaleString();
+      document.getElementById('statMeteors').innerText = meteorsCaught.toLocaleString();
+      document.getElementById('statPlanet').innerText = getCurrentPlanet().name;
+      statsModal.classList.remove('hidden');
+    });
+    document.getElementById('closeStatsBtn').addEventListener('click', () => statsModal.classList.add('hidden'));
+
+    document.getElementById('resetBtn').addEventListener('click', () => resetModal.classList.remove('hidden'));
+    document.getElementById('cancelResetBtn').addEventListener('click', () => resetModal.classList.add('hidden'));
+    document.getElementById('confirmResetBtn').addEventListener('click', () => {
+      localStorage.removeItem('planet_clicker_save');
+      energy = 0;
+      totalHarvested = 0;
+      planetClicks = 0;
+      meteorsCaught = 0;
+      currentPlanetId = 'earth';
+      unlockedPlanets = { earth: true };
+      INSTALLATIONS_DEF.forEach(i => installations[i.id] = 0);
+      resetModal.classList.add('hidden');
+      renderPlanetTabs();
+      updateUI();
+    });
+
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      saveGame();
+      const btn = document.getElementById('saveBtn');
+      btn.innerText = '✅ Saved!';
+      setTimeout(() => btn.innerText = '💾 Save', 1200);
+    });
+
+    // Initialize
+    initStars();
+    loadGame();
+    renderPlanetTabs();
+    updateUI();
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Retro Breakout</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: #090a12;
+      color: #fff;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 12px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 12px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #38bdf8;
+    }
+    .wrap {
+      position: relative;
+      border: 3px solid #38bdf8;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+    }
+    canvas { display: block; background: #030712; cursor: none; }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+    .btn {
+      background: #38bdf8;
+      color: #030712;
+      border: none;
+      padding: 10px 24px;
+      font-weight: 800;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .hint { margin-top: 12px; font-size: 0.85rem; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>SCORE: <span id="score">0</span></div>
+    <div>LIVES: <span id="lives">3</span></div>
+  </div>
+  <div class="wrap">
+    <canvas id="canvas" width="480" height="420"></canvas>
+    <div class="overlay" id="msgOverlay">
+      <h2 id="msgTitle" style="font-size: 2rem; color: #38bdf8;">BREAKOUT</h2>
+      <p id="msgDesc" style="color: #cbd5e1;">Clear all bricks!</p>
+      <button class="btn" onclick="start()">PLAY</button>
+    </div>
+  </div>
+  <div class="hint">Move mouse or Left/Right arrows to control paddle</div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const livesEl = document.getElementById('lives');
+    const msgOverlay = document.getElementById('msgOverlay');
+    const msgTitle = document.getElementById('msgTitle');
+    const msgDesc = document.getElementById('msgDesc');
+
+    let paddle = { x: 200, width: 80, height: 12, speed: 7 };
+    let ball = { x: 240, y: 300, dx: 3.5, dy: -3.5, radius: 6 };
+    let bricks = [];
+    let rows = 5;
+    let cols = 8;
+    let brickWidth = 50;
+    let brickHeight = 16;
+    let brickPadding = 8;
+    let brickOffsetTop = 40;
+    let brickOffsetLeft = 14;
+
+    let score = 0;
+    let lives = 3;
+    let active = false;
+    const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4'];
+
+    function initBricks() {
+      bricks = [];
+      for (let r = 0; r < rows; r++) {
+        bricks[r] = [];
+        for (let c = 0; c < cols; c++) {
+          bricks[r][c] = { x: 0, y: 0, status: 1, color: colors[r % colors.length] };
+        }
+      }
+    }
+
+    function start() {
+      score = 0;
+      lives = 3;
+      scoreEl.textContent = 0;
+      livesEl.textContent = 3;
+      paddle.x = canvas.width / 2 - paddle.width / 2;
+      resetBall();
+      initBricks();
+      active = true;
+      msgOverlay.classList.remove('show');
+    }
+
+    function resetBall() {
+      ball.x = paddle.x + paddle.width / 2;
+      ball.y = canvas.height - 35;
+      ball.dx = 3.5 * (Math.random() > 0.5 ? 1 : -1);
+      ball.dy = -3.5;
+    }
+
+    function collisionDetection() {
+      let remaining = 0;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          let b = bricks[r][c];
+          if (b.status === 1) {
+            remaining++;
+            if (ball.x > b.x && ball.x < b.x + brickWidth && ball.y > b.y && ball.y < b.y + brickHeight) {
+              ball.dy = -ball.dy;
+              b.status = 0;
+              score += 15;
+              scoreEl.textContent = score;
+            }
+          }
+        }
+      }
+      if (remaining === 0) {
+        active = false;
+        msgTitle.textContent = "YOU WON!";
+        msgDesc.textContent = "Final Score: " + score;
+        msgOverlay.classList.add('show');
+      }
+    }
+
+    function update() {
+      if (!active) return;
+
+      ball.x += ball.dx;
+      ball.y += ball.dy;
+
+      // Wall bounce
+      if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+        ball.dx = -ball.dx;
+      }
+      if (ball.y - ball.radius < 0) {
+        ball.dy = -ball.dy;
+      }
+
+      // Paddle bounce
+      if (ball.y + ball.radius > canvas.height - 20 && ball.y - ball.radius < canvas.height - 8) {
+        if (ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
+          // Angle based on hit position
+          let hitPoint = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
+          ball.dx = hitPoint * 5;
+          ball.dy = -Math.abs(ball.dy);
+        }
+      }
+
+      // Bottom fall
+      if (ball.y + ball.radius > canvas.height) {
+        lives--;
+        livesEl.textContent = lives;
+        if (lives <= 0) {
+          active = false;
+          msgTitle.textContent = "GAME OVER";
+          msgDesc.textContent = "Score: " + score;
+          msgOverlay.classList.add('show');
+        } else {
+          resetBall();
+        }
+      }
+
+      collisionDetection();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Bricks
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (bricks[r][c].status === 1) {
+            let bx = c * (brickWidth + brickPadding) + brickOffsetLeft;
+            let by = r * (brickHeight + brickPadding) + brickOffsetTop;
+            bricks[r][c].x = bx;
+            bricks[r][c].y = by;
+            ctx.fillStyle = bricks[r][c].color;
+            ctx.fillRect(bx, by, brickWidth, brickHeight);
+          }
+        }
+      }
+
+      // Paddle
+      ctx.fillStyle = '#38bdf8';
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 10;
+      ctx.fillRect(paddle.x, canvas.height - 20, paddle.width, paddle.height);
+
+      // Ball
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#ffffff';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    canvas.addEventListener('mousemove', e => {
+      let rect = canvas.getBoundingClientRect();
+      let mouseX = e.clientX - rect.left;
+      paddle.x = Math.max(0, Math.min(canvas.width - paddle.width, mouseX - paddle.width / 2));
+    });
+
+    window.addEventListener('keydown', e => {
+      if (e.code === 'ArrowLeft') paddle.x = Math.max(0, paddle.x - 25);
+      if (e.code === 'ArrowRight') paddle.x = Math.min(canvas.width - paddle.width, paddle.x + 25);
+    });
+
+    initBricks();
+    msgOverlay.classList.add('show');
+    loop();
+  </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "Tralalala Games",
+  "description": "A web arcade featuring iframe-embedded games loaded dynamically from a JSON database with search, fullscreen, category filters, and an in-app multi-tab web browser.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

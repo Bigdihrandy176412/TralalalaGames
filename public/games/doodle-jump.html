@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sky Jumper</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: #0f172a;
+      color: #fff;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 12px;
+    }
+    .score { font-size: 1.25rem; font-weight: 800; color: #10b981; margin-bottom: 8px; }
+    .wrap {
+      position: relative;
+      border: 3px solid #10b981;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
+    }
+    canvas { display: block; background: #0b1329; }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(11, 19, 41, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+    .btn {
+      background: #10b981;
+      color: #0b1329;
+      border: none;
+      padding: 10px 24px;
+      font-weight: 800;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .hint { margin-top: 10px; color: #94a3b8; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div class="score">HEIGHT: <span id="scoreVal">0</span></div>
+  <div class="wrap">
+    <canvas id="canvas" width="360" height="500"></canvas>
+    <div class="overlay" id="overlay">
+      <h2 id="ovTitle" style="font-size: 2rem; color: #10b981;">SKY JUMPER</h2>
+      <p id="ovDesc" style="color: #cbd5e1;">Bounce on platforms to climb high!</p>
+      <button class="btn" onclick="start()">JUMP!</button>
+    </div>
+  </div>
+  <div class="hint">Use Arrow keys or A/D to steer</div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const scoreVal = document.getElementById('scoreVal');
+    const overlay = document.getElementById('overlay');
+    const ovTitle = document.getElementById('ovTitle');
+    const ovDesc = document.getElementById('ovDesc');
+
+    let player = { x: 160, y: 380, vx: 0, vy: 0, w: 24, h: 24 };
+    let platforms = [];
+    let score = 0;
+    let running = false;
+    let keys = {};
+
+    function start() {
+      score = 0;
+      scoreVal.textContent = 0;
+      player = { x: 160, y: 380, vx: 0, vy: -9, w: 24, h: 24 };
+      platforms = [];
+      // Initial platforms
+      platforms.push({ x: 140, y: 440, w: 80, h: 12 });
+      for (let i = 0; i < 7; i++) {
+        platforms.push({
+          x: Math.random() * (canvas.width - 70),
+          y: 440 - i * 65,
+          w: 65,
+          h: 12
+        });
+      }
+      running = true;
+      overlay.classList.remove('show');
+    }
+
+    function update() {
+      if (!running) return;
+
+      if (keys['ArrowLeft'] || keys['KeyA']) player.vx = -4.5;
+      else if (keys['ArrowRight'] || keys['KeyD']) player.vx = 4.5;
+      else player.vx *= 0.8;
+
+      player.x += player.vx;
+      if (player.x < -player.w) player.x = canvas.width;
+      if (player.x > canvas.width) player.x = -player.w;
+
+      player.vy += 0.28; // Gravity
+      player.y += player.vy;
+
+      // Platform bounce
+      if (player.vy > 0) {
+        platforms.forEach(p => {
+          if (
+            player.x + player.w > p.x &&
+            player.x < p.x + p.w &&
+            player.y + player.h >= p.y &&
+            player.y + player.h <= p.y + 12
+          ) {
+            player.vy = -8.5; // Jump
+          }
+        });
+      }
+
+      // Camera scroll up
+      if (player.y < 200) {
+        let diff = 200 - player.y;
+        player.y = 200;
+        score += Math.floor(diff);
+        scoreVal.textContent = score;
+
+        platforms.forEach(p => {
+          p.y += diff;
+        });
+      }
+
+      // Remove fallen platforms and recycle
+      platforms.forEach(p => {
+        if (p.y > canvas.height) {
+          p.y = 0;
+          p.x = Math.random() * (canvas.width - 65);
+        }
+      });
+
+      // Fall off bottom = game over
+      if (player.y > canvas.height) {
+        running = false;
+        ovTitle.textContent = "FELL OFF!";
+        ovDesc.textContent = "Final Height: " + score;
+        overlay.classList.add('show');
+      }
+    }
+
+    function draw() {
+      ctx.fillStyle = '#0b1329';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Platforms
+      platforms.forEach(p => {
+        ctx.fillStyle = '#10b981';
+        ctx.fillRect(p.x, p.y, p.w, p.h);
+      });
+
+      // Player
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(player.x + player.w / 2, player.y + player.h / 2, player.w / 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eyes
+      ctx.fillStyle = '#000';
+      ctx.fillRect(player.x + player.w / 2 - (player.vx < 0 ? 8 : 2), player.y + 6, 3, 5);
+      ctx.fillRect(player.x + player.w / 2 + (player.vx < 0 ? -2 : 4), player.y + 6, 3, 5);
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    window.addEventListener('keydown', e => { keys[e.code] = true; });
+    window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+    overlay.classList.add('show');
+    loop();
+  </script>
+</body>
+</html>

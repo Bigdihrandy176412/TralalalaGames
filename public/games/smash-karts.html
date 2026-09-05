@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Smash Karts 3D</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      background: #020617;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      touch-action: none;
+    }
+    #gameCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    /* HUD Overlays */
+    .hud-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 16px;
+      z-index: 10;
+    }
+    .top-hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .pill {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(8px);
+      border-radius: 12px;
+      padding: 8px 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      pointer-events: auto;
+    }
+    .health-container {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 180px;
+    }
+    .health-bar-bg {
+      width: 100%;
+      height: 14px;
+      background: #1e293b;
+      border-radius: 7px;
+      overflow: hidden;
+      border: 1px solid #334155;
+    }
+    .health-bar-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #10b981, #34d399);
+      transition: width 0.15s ease, background 0.2s;
+    }
+    /* Active Item Box HUD in Bottom-Center */
+    .item-slot-hud {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      pointer-events: auto;
+    }
+    .item-circle {
+      width: 76px;
+      height: 76px;
+      border-radius: 20px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 3px solid #38bdf8;
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .item-icon {
+      font-size: 32px;
+      line-height: 1;
+    }
+    .item-name {
+      font-size: 11px;
+      font-weight: 800;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .item-hint {
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 2px 8px;
+      border-radius: 9999px;
+    }
+    /* Leaderboard in Top-Right */
+    .leaderboard {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+      min-width: 170px;
+    }
+    .leaderboard-title {
+      font-weight: 800;
+      color: #facc15;
+      margin-bottom: 2px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .leaderboard-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .leaderboard-row.me {
+      color: #38bdf8;
+      font-weight: 800;
+    }
+    /* Kill Feed Notifications in Top-Center */
+    .kill-feed {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+      pointer-events: none;
+    }
+    .kill-msg {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid #f43f5e;
+      color: #fff;
+      padding: 4px 14px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 800;
+      animation: fadeInOut 3s forwards;
+      box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(-8px); }
+      10% { opacity: 1; transform: translateY(0); }
+      80% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-12px); }
+    }
+    /* Mobile Controls */
+    .mobile-controls {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: none; /* Shown on touch screens */
+    }
+    .joystick-zone {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      pointer-events: auto;
+      touch-action: none;
+    }
+    .joystick-knob {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #38bdf8;
+      position: absolute;
+      top: 35px;
+      left: 35px;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+      pointer-events: none;
+    }
+    .action-zone {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: flex-end;
+      pointer-events: auto;
+    }
+    .btn-touch {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      font-weight: 900;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+      touch-action: none;
+    }
+    .btn-fire {
+      background: linear-gradient(135deg, #ef4444, #b91c1c);
+      width: 80px;
+      height: 80px;
+      font-size: 15px;
+    }
+    .btn-drift {
+      background: linear-gradient(135deg, #eab308, #ca8a04);
+    }
+    /* Overlays & Modals */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.9);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 30;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .game-title {
+      font-family: Impact, sans-serif;
+      font-size: clamp(36px, 7vw, 64px);
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #38bdf8, #818cf8, #f43f5e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 6px 16px rgba(56, 189, 248, 0.5));
+    }
+    .btn-play {
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+      color: white;
+      border: 2px solid #7dd3fc;
+      padding: 14px 40px;
+      border-radius: 9999px;
+      font-size: 20px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 6px 25px rgba(2, 132, 199, 0.5);
+      transition: transform 0.15s, filter 0.15s;
+    }
+    .btn-play:hover {
+      filter: brightness(1.15);
+      transform: scale(1.05);
+    }
+    .btn-icon {
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: white;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+    .btn-icon:hover {
+      background: #334155;
+    }
+  </style>
+  <!-- Load Local Three.js with fallback to CDN -->
+  <script src="/assets/three.min.js"></script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+    }
+  </script>
+</head>
+<body>
+  <div id="container" style="width: 100vw; height: 100vh; position: relative;">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Top HUD Layer -->
+    <div class="hud-layer">
+      <div class="top-hud">
+        <!-- Player HP & Status -->
+        <div class="pill health-container">
+          <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 800;">
+            <span style="color: #38bdf8;">YOU (Cyan Kart)</span>
+            <span id="hpText" style="color: #34d399;">100 HP</span>
+          </div>
+          <div class="health-bar-bg">
+            <div class="health-bar-fill" id="hpFill"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-top: 2px;">
+            <span>Kills: <b id="killCount" style="color: #facc15;">0</b></span>
+            <span>Deaths: <b id="deathCount" style="color: #f87171;">0</b></span>
+          </div>
+        </div>
+
+        <!-- Center Match Timer -->
+        <div class="pill" style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 16px;">⏱️</span>
+          <span id="timerText" style="font-family: monospace; font-size: 18px; font-weight: 900; color: #facc15;">03:00</span>
+          <button class="btn-icon" id="soundBtn" title="Toggle Sound">🔊</button>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="pill leaderboard" id="leaderboardBox">
+          <div class="leaderboard-title">
+            <span>LEADERBOARD</span>
+            <span>KILLS</span>
+          </div>
+          <div id="leaderboardRows"></div>
+        </div>
+      </div>
+
+      <!-- Kill Feed Banner in Center -->
+      <div class="kill-feed" id="killFeed"></div>
+
+      <!-- Active Item HUD -->
+      <div class="item-slot-hud">
+        <div class="item-circle" id="itemBox">
+          <div class="item-icon" id="itemIcon">❓</div>
+        </div>
+        <div class="item-name" id="itemName">Empty Box</div>
+        <div class="item-hint">Press <b style="color: #38bdf8;">SPACE</b> to Fire</div>
+      </div>
+    </div>
+
+    <!-- Mobile Virtual Controls -->
+    <div class="mobile-controls" id="mobileControls">
+      <div class="joystick-zone" id="joystickZone">
+        <div class="joystick-knob" id="joystickKnob"></div>
+      </div>
+      <div class="action-zone">
+        <button class="btn-touch btn-fire" id="touchFire">FIRE</button>
+        <button class="btn-touch btn-drift" id="touchDrift">DRIFT</button>
+      </div>
+    </div>
+
+    <!-- Main Menu / Respawn / Game Over Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="game-title">SMASH KARTS 3D</div>
+      <div id="overlaySubtitle" style="font-size: 16px; color: #94a3b8; max-width: 440px; text-align: center; line-height: 1.5;">
+        Collect mystery item boxes, drift around corners, and smash rivals with homing rockets, mines, and gatling guns!
+      </div>
+      <div style="display: flex; gap: 12px; margin-top: 8px;">
+        <button class="btn-play" id="startBtn">START BATTLE</button>
+      </div>
+      <div style="font-size: 12px; color: #64748b; margin-top: 10px;">
+        Controls: <b style="color: #38bdf8;">WASD</b> / <b style="color: #38bdf8;">Arrows</b> to Drive | <b style="color: #38bdf8;">SPACE</b> to Fire | <b style="color: #38bdf8;">SHIFT</b> to Drift
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Web Audio Synthesizer ---
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+        this.engineOsc = null;
+        this.engineGain = null;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            this.ctx = new AudioContext();
+            this.startEngineHum();
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      startEngineHum() {
+        if (!this.ctx || this.engineOsc) return;
+        this.engineOsc = this.ctx.createOscillator();
+        this.engineGain = this.ctx.createGain();
+        this.engineOsc.type = 'sawtooth';
+        this.engineOsc.frequency.setValueAtTime(55, this.ctx.currentTime);
+        this.engineGain.gain.setValueAtTime(0.02, this.ctx.currentTime);
+        this.engineOsc.connect(this.engineGain);
+        this.engineGain.connect(this.ctx.destination);
+        this.engineOsc.start();
+      }
+      setEnginePitch(speedRatio) {
+        if (!this.ctx || !this.engineOsc || this.muted) return;
+        const targetFreq = 50 + speedRatio * 85;
+        this.engineOsc.frequency.setTargetAtTime(targetFreq, this.ctx.currentTime, 0.05);
+        this.engineGain.gain.setTargetAtTime(Math.min(0.04, 0.015 + speedRatio * 0.025), this.ctx.currentTime, 0.05);
+      }
+      pickup() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.04);
+          gain.gain.setValueAtTime(0.12, this.ctx.currentTime + i * 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + i * 0.04 + 0.15);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(this.ctx.currentTime + i * 0.04);
+          osc.stop(this.ctx.currentTime + i * 0.04 + 0.16);
+        });
+      }
+      rocketFire() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(280, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.26);
+      }
+      explosion() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const bufferSize = this.ctx.sampleRate * 0.4;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.2));
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(450, this.ctx.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.35);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start();
+      }
+      gatling() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.06);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.06);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.07);
+      }
+      boost() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(600, this.ctx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.32);
+      }
+    }
+    const audio = new SoundEngine();
+
+    // --- Weapon / Item Definitions ---
+    const ITEMS = {
+      ROCKET: { id: 'ROCKET', name: 'Homing Rocket', icon: '🚀', color: '#ef4444' },
+      MINE: { id: 'MINE', name: 'Spike Mine', icon: '💣', color: '#f59e0b' },
+      GATLING: { id: 'GATLING', name: 'Gatling Cannon', icon: '⚡', color: '#38bdf8' },
+      BOOST: { id: 'BOOST', name: 'Super Turbo', icon: '⭐', color: '#facc15' },
+    };
+
+    // --- Setup Three.js Scene ---
+    const canvas = document.getElementById('gameCanvas');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0f1d);
+    scene.fog = new THREE.FogExp2(0x0a0f1d, 0.007);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xfff7ed, 0.9);
+    dirLight.position.set(40, 70, 30);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
+    scene.add(dirLight);
+
+    // --- Build Arena ---
+    const ARENA_SIZE = 160;
+    const arenaGroup = new THREE.Group();
+    scene.add(arenaGroup);
+
+    // Arena Floor
+    const floorGeo = new THREE.PlaneGeometry(ARENA_SIZE, ARENA_SIZE, 32, 32);
+    const floorMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b,
+      roughness: 0.8,
+      metalness: 0.2,
+    });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    arenaGroup.add(floor);
+
+    // Grid markings on floor
+    const grid = new THREE.GridHelper(ARENA_SIZE, 32, 0x38bdf8, 0x334155);
+    grid.position.y = 0.05;
+    arenaGroup.add(grid);
+
+    // Arena Boundary Walls
+    const wallHeight = 6;
+    const wallThickness = 2;
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5, metalness: 0.5 });
+    const neonWallMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+
+    function createWall(x, z, w, d) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, wallHeight, d), wallMat);
+      mesh.position.set(x, wallHeight / 2, z);
+      arenaGroup.add(mesh);
+      // Glowing neon stripe along wall top
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(w, 0.4, d), neonWallMat);
+      stripe.position.set(x, wallHeight + 0.2, z);
+      arenaGroup.add(stripe);
+    }
+    createWall(0, -ARENA_SIZE / 2, ARENA_SIZE, wallThickness);
+    createWall(0, ARENA_SIZE / 2, ARENA_SIZE, wallThickness);
+    createWall(-ARENA_SIZE / 2, 0, wallThickness, ARENA_SIZE);
+    createWall(ARENA_SIZE / 2, 0, wallThickness, ARENA_SIZE);
+
+    // Inner Obstacles & Pillars
+    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.6 });
+    const obstacles = [
+      { x: -35, z: -35, r: 4 },
+      { x: 35, z: -35, r: 4 },
+      { x: -35, z: 35, r: 4 },
+      { x: 35, z: 35, r: 4 },
+      { x: 0, z: 0, r: 6 },
+    ];
+    obstacles.forEach((obs) => {
+      const geo = new THREE.CylinderGeometry(obs.r, obs.r, 5, 16);
+      const mesh = new THREE.Mesh(geo, pillarMat);
+      mesh.position.set(obs.x, 2.5, obs.z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      arenaGroup.add(mesh);
+    });
+
+    // Speed Boost Pads on Arena Floor
+    const boostPads = [
+      { x: -45, z: 0 },
+      { x: 45, z: 0 },
+      { x: 0, z: -45 },
+      { x: 0, z: 45 },
+    ];
+    const padGeo = new THREE.PlaneGeometry(6, 10);
+    const padMat = new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide });
+    boostPads.forEach((p) => {
+      const mesh = new THREE.Mesh(padGeo, padMat);
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.set(p.x, 0.1, p.z);
+      arenaGroup.add(mesh);
+    });
+
+    // --- Mystery Item Boxes ---
+    const boxPositions = [
+      { x: -20, z: -20 },
+      { x: 20, z: -20 },
+      { x: -20, z: 20 },
+      { x: 20, z: 20 },
+      { x: -50, z: -50 },
+      { x: 50, z: -50 },
+      { x: -50, z: 50 },
+      { x: 50, z: 50 },
+    ];
+    const mysteryBoxes = [];
+    const boxGeo = new THREE.BoxGeometry(2.5, 2.5, 2.5);
+    const boxMat = new THREE.MeshStandardMaterial({
+      color: 0xfacc15,
+      emissive: 0xca8a04,
+      emissiveIntensity: 0.6,
+      roughness: 0.3,
+      metalness: 0.8,
+    });
+
+    boxPositions.forEach((pos, i) => {
+      const mesh = new THREE.Mesh(boxGeo, boxMat);
+      mesh.position.set(pos.x, 2.2, pos.z);
+      mesh.castShadow = true;
+      scene.add(mesh);
+      mysteryBoxes.push({
+        mesh,
+        basePos: pos,
+        active: true,
+        respawnTimer: 0,
+      });
+    });
+
+    // --- Kart 3D Mesh Generator ---
+    function buildKartMesh(colorHex, isPlayer = false) {
+      const kart = new THREE.Group();
+
+      // Main Chassis
+      const bodyGeo = new THREE.BoxGeometry(2.8, 1.0, 4.4);
+      const bodyMat = new THREE.MeshStandardMaterial({
+        color: colorHex,
+        metalness: 0.6,
+        roughness: 0.3,
+      });
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.position.y = 0.8;
+      body.castShadow = true;
+      kart.add(body);
+
+      // White Racing Stripe
+      const stripe = new THREE.Mesh(
+        new THREE.BoxGeometry(0.7, 1.02, 4.42),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 })
+      );
+      stripe.position.y = 0.8;
+      kart.add(stripe);
+
+      // Front Bumper
+      const bumper = new THREE.Mesh(
+        new THREE.BoxGeometry(3.2, 0.4, 0.8),
+        new THREE.MeshStandardMaterial({ color: 0x0f172a })
+      );
+      bumper.position.set(0, 0.5, 2.3);
+      kart.add(bumper);
+
+      // Rear Wing / Spoiler
+      const spoiler = new THREE.Mesh(
+        new THREE.BoxGeometry(3.2, 0.2, 0.8),
+        new THREE.MeshStandardMaterial({ color: colorHex })
+      );
+      spoiler.position.set(0, 1.8, -2.0);
+      kart.add(spoiler);
+
+      // Wheels (4 chunky black cylinders)
+      const wheelGeo = new THREE.CylinderGeometry(0.65, 0.65, 0.55, 16);
+      const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.9 });
+      const wheelPositions = [
+        { x: -1.6, z: 1.4 },
+        { x: 1.6, z: 1.4 },
+        { x: -1.6, z: -1.4 },
+        { x: 1.6, z: -1.4 },
+      ];
+      kart.wheels = [];
+      wheelPositions.forEach((wp) => {
+        const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+        wheel.rotation.z = Math.PI / 2;
+        wheel.position.set(wp.x, 0.65, wp.z);
+        wheel.castShadow = true;
+        kart.add(wheel);
+        kart.wheels.push(wheel);
+      });
+
+      // Driver Character
+      const head = new THREE.Mesh(
+        new THREE.SphereGeometry(0.65, 16, 16),
+        new THREE.MeshStandardMaterial({ color: isPlayer ? 0x10b981 : 0xf43f5e })
+      );
+      head.position.set(0, 1.8, -0.2);
+      kart.add(head);
+
+      // Helmet Visor
+      const visor = new THREE.Mesh(
+        new THREE.BoxGeometry(0.8, 0.35, 0.4),
+        new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.9, roughness: 0.1 })
+      );
+      visor.position.set(0, 1.85, 0.35);
+      kart.add(visor);
+
+      // Dual Exhaust Pipes
+      const pipeGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.6, 8);
+      const pipeMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8 });
+      const pipeL = new THREE.Mesh(pipeGeo, pipeMat);
+      pipeL.rotation.x = Math.PI / 2;
+      pipeL.position.set(-0.7, 0.7, -2.3);
+      kart.add(pipeL);
+
+      const pipeR = new THREE.Mesh(pipeGeo, pipeMat);
+      pipeR.rotation.x = Math.PI / 2;
+      pipeR.position.set(0.7, 0.7, -2.3);
+      kart.add(pipeR);
+
+      return kart;
+    }
+
+    // --- Kart Actor Class ---
+    class KartActor {
+      constructor(name, colorHex, isPlayer = false, startPos = { x: 0, z: 0 }) {
+        this.name = name;
+        this.colorHex = colorHex;
+        this.isPlayer = isPlayer;
+        this.mesh = buildKartMesh(colorHex, isPlayer);
+        scene.add(this.mesh);
+
+        this.x = startPos.x;
+        this.z = startPos.z;
+        this.y = 0;
+        this.angle = Math.random() * Math.PI * 2;
+        this.speed = 0;
+        this.steer = 0;
+
+        this.maxSpeed = 1.25;
+        this.accel = 0.035;
+        this.friction = 0.96;
+        this.turnSpeed = 0.052;
+
+        this.hp = 100;
+        this.isDead = false;
+        this.respawnTimer = 0;
+        this.kills = 0;
+        this.deaths = 0;
+
+        this.activeItem = null;
+        this.boostTimer = 0;
+        this.isDrifting = false;
+
+        this.updateTransform();
+      }
+
+      updateTransform() {
+        this.mesh.position.set(this.x, this.y, this.z);
+        this.mesh.rotation.y = this.angle;
+      }
+
+      takeDamage(amount, attacker) {
+        if (this.isDead) return;
+        this.hp -= amount;
+        if (this.hp <= 0) {
+          this.hp = 0;
+          this.die(attacker);
+        }
+      }
+
+      die(attacker) {
+        this.isDead = true;
+        this.respawnTimer = 180; // 3 seconds at 60fps
+        this.deaths++;
+        if (attacker && attacker !== this) {
+          attacker.kills++;
+          notifyKill(attacker.name, this.name);
+        }
+
+        audio.explosion();
+        spawnExplosion(this.x, 1.5, this.z);
+        this.mesh.visible = false;
+      }
+
+      respawn() {
+        this.isDead = false;
+        this.hp = 100;
+        this.x = (Math.random() - 0.5) * (ARENA_SIZE - 40);
+        this.z = (Math.random() - 0.5) * (ARENA_SIZE - 40);
+        this.speed = 0;
+        this.mesh.visible = true;
+      }
+
+      useItem() {
+        if (!this.activeItem || this.isDead) return;
+        const item = this.activeItem;
+        this.activeItem = null;
+
+        if (item.id === 'ROCKET') {
+          audio.rocketFire();
+          spawnRocket(this);
+        } else if (item.id === 'MINE') {
+          audio.boost();
+          spawnMine(this);
+        } else if (item.id === 'GATLING') {
+          fireGatling(this);
+        } else if (item.id === 'BOOST') {
+          audio.boost();
+          this.boostTimer = 120; // 2 seconds
+        }
+
+        if (this.isPlayer) {
+          updateItemHud();
+        }
+      }
+
+      update() {
+        if (this.isDead) {
+          this.respawnTimer--;
+          if (this.respawnTimer <= 0) {
+            this.respawn();
+          }
+          return;
+        }
+
+        // Boost effect
+        let topSpeed = this.maxSpeed;
+        if (this.boostTimer > 0) {
+          this.boostTimer--;
+          topSpeed *= 1.7;
+        }
+
+        // Steer while moving
+        if (Math.abs(this.speed) > 0.05) {
+          this.angle += this.steer * this.turnSpeed * (this.speed > 0 ? 1 : -1);
+        }
+
+        // Apply friction
+        this.speed *= this.friction;
+
+        // Position update
+        this.x += Math.sin(this.angle) * this.speed;
+        this.z += Math.cos(this.angle) * this.speed;
+
+        // Wheel spin animation
+        if (this.mesh.wheels) {
+          this.mesh.wheels.forEach((w) => {
+            w.rotation.x += this.speed * 0.8;
+          });
+        }
+
+        // Boundary collision
+        const margin = ARENA_SIZE / 2 - 4;
+        if (Math.abs(this.x) > margin) {
+          this.x = Math.sign(this.x) * margin;
+          this.speed *= -0.5;
+        }
+        if (Math.abs(this.z) > margin) {
+          this.z = Math.sign(this.z) * margin;
+          this.speed *= -0.5;
+        }
+
+        // Obstacle cylinder collisions
+        obstacles.forEach((obs) => {
+          const dx = this.x - obs.x;
+          const dz = this.z - obs.z;
+          const dist = Math.hypot(dx, dz);
+          if (dist < obs.r + 2.0) {
+            const push = (obs.r + 2.0 - dist);
+            this.x += (dx / dist) * push;
+            this.z += (dz / dist) * push;
+            this.speed *= -0.4;
+          }
+        });
+
+        // Speed boost pad triggers
+        boostPads.forEach((p) => {
+          if (Math.hypot(this.x - p.x, this.z - p.z) < 5.0) {
+            this.boostTimer = 90;
+            audio.boost();
+          }
+        });
+
+        // Mystery box pickup
+        mysteryBoxes.forEach((b) => {
+          if (b.active && Math.hypot(this.x - b.mesh.position.x, this.z - b.mesh.position.z) < 4.0) {
+            b.active = false;
+            b.mesh.visible = false;
+            b.respawnTimer = 480; // 8 seconds
+            if (!this.activeItem) {
+              const keys = Object.keys(ITEMS);
+              const randKey = keys[Math.floor(Math.random() * keys.length)];
+              this.activeItem = ITEMS[randKey];
+              if (this.isPlayer) {
+                audio.pickup();
+                updateItemHud();
+              }
+            }
+          }
+        });
+
+        this.updateTransform();
+      }
+    }
+
+    // --- Instantiate Karts ---
+    const playerKart = new KartActor('YOU', 0x38bdf8, true, { x: 0, z: 20 });
+    const botKarts = [
+      new KartActor('Bot Sparky', 0xef4444, false, { x: -30, z: -30 }),
+      new KartActor('Bot Nitro', 0x10b981, false, { x: 30, z: -30 }),
+      new KartActor('Bot Turbo', 0xf59e0b, false, { x: -30, z: 30 }),
+      new KartActor('Bot Blaze', 0xa855f7, false, { x: 30, z: 30 }),
+    ];
+    const allKarts = [playerKart, ...botKarts];
+
+    // --- Projectiles & Weapons System ---
+    const rockets = [];
+    const mines = [];
+    const bullets = [];
+    const particles = [];
+
+    // 1. Rocket Projectile
+    const rocketGeo = new THREE.CylinderGeometry(0.3, 0.3, 1.8, 8);
+    const rocketMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+
+    function spawnRocket(shooter) {
+      const mesh = new THREE.Mesh(rocketGeo, rocketMat);
+      mesh.rotation.x = Math.PI / 2;
+      mesh.position.set(shooter.x, 1.5, shooter.z);
+      scene.add(mesh);
+
+      // Find nearest alive enemy kart
+      let target = null;
+      let minDist = Infinity;
+      allKarts.forEach((k) => {
+        if (k !== shooter && !k.isDead) {
+          const d = Math.hypot(k.x - shooter.x, k.z - shooter.z);
+          if (d < minDist) {
+            minDist = d;
+            target = k;
+          }
+        }
+      });
+
+      rockets.push({
+        mesh,
+        shooter,
+        target,
+        x: shooter.x,
+        z: shooter.z,
+        y: 1.5,
+        angle: shooter.angle,
+        speed: 2.2,
+        life: 180,
+      });
+    }
+
+    // 2. Spike Mine
+    const mineGeo = new THREE.DodecahedronGeometry(0.9);
+    const mineMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.3 });
+
+    function spawnMine(shooter) {
+      const mesh = new THREE.Mesh(mineGeo, mineMat);
+      mesh.position.set(shooter.x - Math.sin(shooter.angle) * 3, 0.8, shooter.z - Math.cos(shooter.angle) * 3);
+      scene.add(mesh);
+      mines.push({
+        mesh,
+        shooter,
+        x: mesh.position.x,
+        z: mesh.position.z,
+        life: 600,
+      });
+    }
+
+    // 3. Gatling Gun Burst
+    function fireGatling(shooter) {
+      for (let i = 0; i < 6; i++) {
+        setTimeout(() => {
+          if (shooter.isDead) return;
+          audio.gatling();
+          const spread = (Math.random() - 0.5) * 0.2;
+          const bullet = {
+            mesh: new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), new THREE.MeshBasicMaterial({ color: 0xfacc15 })),
+            shooter,
+            x: shooter.x,
+            z: shooter.z,
+            angle: shooter.angle + spread,
+            speed: 3.5,
+            life: 40,
+          };
+          bullet.mesh.position.set(bullet.x, 1.2, bullet.z);
+          scene.add(bullet.mesh);
+          bullets.push(bullet);
+        }, i * 70);
+      }
+    }
+
+    // 4. Explosion Particles
+    function spawnExplosion(x, y, z) {
+      for (let i = 0; i < 24; i++) {
+        const pMesh = new THREE.Mesh(
+          new THREE.BoxGeometry(0.5, 0.5, 0.5),
+          new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0xef4444 : 0xfacc15 })
+        );
+        pMesh.position.set(x, y, z);
+        scene.add(pMesh);
+        particles.push({
+          mesh: pMesh,
+          vx: (Math.random() - 0.5) * 1.2,
+          vy: Math.random() * 1.5 + 0.5,
+          vz: (Math.random() - 0.5) * 1.2,
+          life: 45,
+        });
+      }
+    }
+
+    // --- AI Controller for Bots ---
+    function updateBots() {
+      botKarts.forEach((bot) => {
+        if (bot.isDead) return;
+
+        // Find nearest active mystery box if don't have item
+        let targetX = 0;
+        let targetZ = 0;
+
+        if (!bot.activeItem) {
+          let closestBox = null;
+          let minBoxDist = Infinity;
+          mysteryBoxes.forEach((b) => {
+            if (b.active) {
+              const d = Math.hypot(b.mesh.position.x - bot.x, b.mesh.position.z - bot.z);
+              if (d < minBoxDist) {
+                minBoxDist = d;
+                closestBox = b;
+              }
+            }
+          });
+          if (closestBox) {
+            targetX = closestBox.mesh.position.x;
+            targetZ = closestBox.mesh.position.z;
+          }
+        } else {
+          // Has item: hunt nearest rival (or player)
+          let nearestEnemy = playerKart;
+          let minEnemyDist = Math.hypot(playerKart.x - bot.x, playerKart.z - bot.z);
+
+          botKarts.forEach((other) => {
+            if (other !== bot && !other.isDead) {
+              const d = Math.hypot(other.x - bot.x, other.z - bot.z);
+              if (d < minEnemyDist) {
+                minEnemyDist = d;
+                nearestEnemy = other;
+              }
+            }
+          });
+
+          targetX = nearestEnemy.x;
+          targetZ = nearestEnemy.z;
+
+          // Fire item if lined up or within range
+          if (minEnemyDist < 35 && Math.random() < 0.05) {
+            bot.useItem();
+          }
+        }
+
+        // Steer toward target
+        const dx = targetX - bot.x;
+        const dz = targetZ - bot.z;
+        const desiredAngle = Math.atan2(dx, dz);
+        let angleDiff = desiredAngle - bot.angle;
+
+        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+        while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+        bot.steer = Math.max(-1, Math.min(1, angleDiff * 3));
+        bot.speed = Math.min(bot.maxSpeed * 0.9, bot.speed + bot.accel);
+      });
+    }
+
+    // --- Kill Feed Notifications ---
+    function notifyKill(killer, victim) {
+      const feed = document.getElementById('killFeed');
+      const msg = document.createElement('div');
+      msg.className = 'kill-msg';
+      msg.innerHTML = `💥 <b>${killer}</b> smashed <b>${victim}</b>!`;
+      feed.appendChild(msg);
+      setTimeout(() => msg.remove(), 3000);
+      updateLeaderboard();
+    }
+
+    // --- Update HUD Elements ---
+    function updateItemHud() {
+      const icon = document.getElementById('itemIcon');
+      const name = document.getElementById('itemName');
+      if (playerKart.activeItem) {
+        icon.textContent = playerKart.activeItem.icon;
+        name.textContent = playerKart.activeItem.name;
+        document.getElementById('itemBox').style.borderColor = playerKart.activeItem.color;
+      } else {
+        icon.textContent = '❓';
+        name.textContent = 'Empty Box';
+        document.getElementById('itemBox').style.borderColor = '#38bdf8';
+      }
+    }
+
+    function updateLeaderboard() {
+      const sorted = [...allKarts].sort((a, b) => b.kills - a.kills || a.deaths - b.deaths);
+      const rows = document.getElementById('leaderboardRows');
+      rows.innerHTML = '';
+      sorted.forEach((k) => {
+        const row = document.createElement('div');
+        row.className = `leaderboard-row ${k.isPlayer ? 'me' : ''}`;
+        row.innerHTML = `<span>${k.name}</span><span>${k.kills}</span>`;
+        rows.appendChild(row);
+      });
+
+      document.getElementById('killCount').textContent = playerKart.kills;
+      document.getElementById('deathCount').textContent = playerKart.deaths;
+    }
+
+    // --- Controls Handler ---
+    const keys = {
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      drift: false,
+    };
+
+    window.addEventListener('keydown', (e) => {
+      audio.init();
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.up = true;
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.down = true;
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.left = true;
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.right = true;
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') keys.drift = true;
+      if (e.code === 'Space') playerKart.useItem();
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.up = false;
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.down = false;
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.left = false;
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.right = false;
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') keys.drift = false;
+    });
+
+    // Mobile Virtual Joystick & Touch
+    if ('ontouchstart' in window) {
+      document.getElementById('mobileControls').style.display = 'block';
+      const jZone = document.getElementById('joystickZone');
+      const jKnob = document.getElementById('joystickKnob');
+      let touchId = null;
+
+      jZone.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const t = e.changedTouches[0];
+        touchId = t.identifier;
+      });
+
+      jZone.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          if (e.changedTouches[i].identifier === touchId) {
+            const rect = jZone.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const dx = e.changedTouches[i].clientX - centerX;
+            const dy = e.changedTouches[i].clientY - centerY;
+            const dist = Math.hypot(dx, dy);
+            const maxDist = rect.width / 2 - 15;
+            const angle = Math.atan2(dy, dx);
+            const clampedDist = Math.min(dist, maxDist);
+
+            jKnob.style.transform = `translate(${Math.cos(angle) * clampedDist}px, ${Math.sin(angle) * clampedDist}px)`;
+
+            keys.up = dy < -15;
+            keys.down = dy > 15;
+            keys.left = dx < -15;
+            keys.right = dx > 15;
+          }
+        }
+      });
+
+      const endTouch = (e) => {
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          if (e.changedTouches[i].identifier === touchId) {
+            touchId = null;
+            jKnob.style.transform = 'translate(0px, 0px)';
+            keys.up = false;
+            keys.down = false;
+            keys.left = false;
+            keys.right = false;
+          }
+        }
+      };
+      jZone.addEventListener('touchend', endTouch);
+      jZone.addEventListener('touchcancel', endTouch);
+
+      document.getElementById('touchFire').addEventListener('touchstart', () => playerKart.useItem());
+      document.getElementById('touchDrift').addEventListener('touchstart', () => { keys.drift = true; });
+      document.getElementById('touchDrift').addEventListener('touchend', () => { keys.drift = false; });
+    }
+
+    // Sound toggle button
+    document.getElementById('soundBtn').addEventListener('click', () => {
+      audio.muted = !audio.muted;
+      document.getElementById('soundBtn').textContent = audio.muted ? '🔇' : '🔊';
+    });
+
+    // Start Button
+    document.getElementById('startBtn').addEventListener('click', () => {
+      audio.init();
+      document.getElementById('overlay').classList.remove('show');
+      matchActive = true;
+    });
+
+    // --- Match Timing ---
+    let matchTime = 180; // 3 minutes
+    let matchActive = false;
+
+    setInterval(() => {
+      if (!matchActive) return;
+      if (matchTime > 0) {
+        matchTime--;
+        const mins = String(Math.floor(matchTime / 60)).padStart(2, '0');
+        const secs = String(matchTime % 60).padStart(2, '0');
+        document.getElementById('timerText').textContent = `${mins}:${secs}`;
+      } else {
+        matchActive = false;
+        document.getElementById('overlaySubtitle').textContent = `MATCH OVER! You finished with ${playerKart.kills} kills!`;
+        document.getElementById('startBtn').textContent = 'PLAY AGAIN';
+        document.getElementById('overlay').classList.add('show');
+      }
+    }, 1000);
+
+    // --- Main Game Loop ---
+    function animate() {
+      requestAnimationFrame(animate);
+
+      if (matchActive) {
+        // Player Input
+        if (keys.up) playerKart.speed = Math.min(playerKart.maxSpeed, playerKart.speed + playerKart.accel);
+        if (keys.down) playerKart.speed = Math.max(-playerKart.maxSpeed * 0.5, playerKart.speed - playerKart.accel);
+        playerKart.steer = (keys.left ? 1 : 0) - (keys.right ? 1 : 0);
+
+        audio.setEnginePitch(Math.abs(playerKart.speed) / playerKart.maxSpeed);
+
+        // Update Bots
+        updateBots();
+      }
+
+      // Update all karts
+      allKarts.forEach((k) => k.update());
+
+      // Update Mystery Boxes animation & respawn
+      mysteryBoxes.forEach((b) => {
+        if (!b.active) {
+          b.respawnTimer--;
+          if (b.respawnTimer <= 0) {
+            b.active = true;
+            b.mesh.visible = true;
+          }
+        } else {
+          b.mesh.rotation.y += 0.03;
+          b.mesh.rotation.x += 0.015;
+          b.mesh.position.y = 2.2 + Math.sin(Date.now() * 0.004 + b.basePos.x) * 0.35;
+        }
+      });
+
+      // Update Rockets
+      for (let i = rockets.length - 1; i >= 0; i--) {
+        const r = rockets[i];
+        r.life--;
+
+        // Homing steering towards target
+        if (r.target && !r.target.isDead) {
+          const dx = r.target.x - r.x;
+          const dz = r.target.z - r.z;
+          const targetAngle = Math.atan2(dx, dz);
+          let diff = targetAngle - r.angle;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          r.angle += Math.sign(diff) * Math.min(Math.abs(diff), 0.08);
+        }
+
+        r.x += Math.sin(r.angle) * r.speed;
+        r.z += Math.cos(r.angle) * r.speed;
+        r.mesh.position.set(r.x, r.y, r.z);
+        r.mesh.rotation.y = r.angle;
+
+        // Check hit against all karts
+        let hit = false;
+        allKarts.forEach((k) => {
+          if (k !== r.shooter && !k.isDead && Math.hypot(k.x - r.x, k.z - r.z) < 2.5) {
+            hit = true;
+            k.takeDamage(50, r.shooter);
+          }
+        });
+
+        if (hit || r.life <= 0 || Math.abs(r.x) > ARENA_SIZE / 2 || Math.abs(r.z) > ARENA_SIZE / 2) {
+          audio.explosion();
+          spawnExplosion(r.x, r.y, r.z);
+          scene.remove(r.mesh);
+          rockets.splice(i, 1);
+        }
+      }
+
+      // Update Mines
+      for (let i = mines.length - 1; i >= 0; i--) {
+        const m = mines[i];
+        m.life--;
+        m.mesh.rotation.y += 0.02;
+
+        let detonated = false;
+        allKarts.forEach((k) => {
+          if (!k.isDead && Math.hypot(k.x - m.x, k.z - m.z) < 2.5) {
+            detonated = true;
+            k.takeDamage(60, m.shooter);
+          }
+        });
+
+        if (detonated || m.life <= 0) {
+          audio.explosion();
+          spawnExplosion(m.x, 0.8, m.z);
+          scene.remove(m.mesh);
+          mines.splice(i, 1);
+        }
+      }
+
+      // Update Bullets
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        const b = bullets[i];
+        b.life--;
+        b.x += Math.sin(b.angle) * b.speed;
+        b.z += Math.cos(b.angle) * b.speed;
+        b.mesh.position.set(b.x, 1.2, b.z);
+
+        let hit = false;
+        allKarts.forEach((k) => {
+          if (k !== b.shooter && !k.isDead && Math.hypot(k.x - b.x, k.z - b.z) < 2.2) {
+            hit = true;
+            k.takeDamage(12, b.shooter);
+          }
+        });
+
+        if (hit || b.life <= 0) {
+          scene.remove(b.mesh);
+          bullets.splice(i, 1);
+        }
+      }
+
+      // Update Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.life--;
+        p.mesh.position.x += p.vx;
+        p.mesh.position.y += p.vy;
+        p.mesh.position.z += p.vz;
+        p.vy -= 0.06;
+        if (p.mesh.position.y < 0.2) p.mesh.position.y = 0.2;
+
+        if (p.life <= 0) {
+          scene.remove(p.mesh);
+          particles.splice(i, 1);
+        }
+      }
+
+      // Camera Smooth Follow behind Player Kart
+      const camOffset = new THREE.Vector3(
+        -Math.sin(playerKart.angle) * 11,
+        6.5,
+        -Math.cos(playerKart.angle) * 11
+      );
+      const targetCamPos = new THREE.Vector3(playerKart.x, playerKart.y, playerKart.z).add(camOffset);
+      camera.position.lerp(targetCamPos, 0.08);
+      camera.lookAt(playerKart.x, playerKart.y + 1.2, playerKart.z);
+
+      // Player Health HUD
+      const hpFill = document.getElementById('hpFill');
+      hpFill.style.width = `${playerKart.hp}%`;
+      document.getElementById('hpText').textContent = `${Math.round(playerKart.hp)} HP`;
+      hpFill.style.background = playerKart.hp > 40 ? 'linear-gradient(90deg, #10b981, #34d399)' : 'linear-gradient(90deg, #ef4444, #f87171)';
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Start
+    updateLeaderboard();
+    document.getElementById('overlay').classList.add('show');
+    animate();
+  </script>
+</body>
+</html>

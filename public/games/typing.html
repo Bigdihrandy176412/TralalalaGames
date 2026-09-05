@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Speed Word Defender</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: #020617;
+      color: #f8fafc;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+      padding: 10px;
+    }
+    .game-container {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      background: #090d16;
+      border: 2px solid #1e293b;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+    }
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 18px;
+      background: #0b0f19;
+      border-bottom: 1px solid #1e293b;
+      font-family: monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: 380px;
+      background: #020617;
+    }
+    .input-bar {
+      padding: 10px 14px;
+      background: #0b0f19;
+      border-top: 1px solid #1e293b;
+      display: flex;
+      gap: 8px;
+    }
+    #typeInput {
+      flex: 1;
+      background: #1e293b;
+      border: 1px solid #334155;
+      padding: 10px 16px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      outline: none;
+      text-transform: uppercase;
+    }
+    #typeInput:focus {
+      border-color: #10b981;
+    }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 24px;
+      text-align: center;
+    }
+    .hidden { display: none !important; }
+    .btn {
+      background: #10b981;
+      color: #030712;
+      border: none;
+      padding: 12px 28px;
+      font-size: 1rem;
+      font-weight: 800;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: #34d399; transform: scale(1.04); }
+  </style>
+</head>
+<body>
+
+  <div class="game-container">
+    <div class="hud">
+      <div>SCORE: <span id="scoreVal" style="color: #38bdf8;">0</span></div>
+      <div>WPM: <span id="wpmVal" style="color: #10b981;">0</span></div>
+      <div>LIVES: <span id="livesVal" style="color: #ef4444;">🛡️🛡️🛡️</span></div>
+    </div>
+
+    <canvas id="gameCanvas" width="600" height="380"></canvas>
+
+    <div class="input-bar">
+      <input type="text" id="typeInput" placeholder="Type here to blast incoming words..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+    </div>
+
+    <div id="startOverlay" class="overlay">
+      <h2 style="font-size: 1.8rem; font-weight: 900; color: #10b981;">SPEED TYPER</h2>
+      <p style="font-size: 0.85rem; color: #94a3b8; max-width: 320px;">Protect your base by typing falling space words before they breach the defense perimeter!</p>
+      <button id="startBtn" class="btn">START DEFENSE</button>
+    </div>
+
+    <div id="gameOverOverlay" class="overlay hidden">
+      <h2 style="font-size: 1.8rem; font-weight: 900; color: #ef4444;">BASE BREACHED</h2>
+      <p style="font-size: 0.85rem; color: #cbd5e1;">Final Score: <span id="finalScore" style="color: #38bdf8; font-weight: 800;">0</span> &bull; WPM: <span id="finalWpm" style="color: #10b981; font-weight: 800;">0</span></p>
+      <button id="restartBtn" class="btn">PLAY AGAIN</button>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreVal = document.getElementById('scoreVal');
+    const wpmVal = document.getElementById('wpmVal');
+    const livesVal = document.getElementById('livesVal');
+    const finalScore = document.getElementById('finalScore');
+    const finalWpm = document.getElementById('finalWpm');
+    const typeInput = document.getElementById('typeInput');
+    const startOverlay = document.getElementById('startOverlay');
+    const gameOverOverlay = document.getElementById('gameOverOverlay');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+
+    let audioCtx = null;
+    function playBeep(freq, type = 'sine', duration = 0.08) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    const WORD_BANK = [
+      'CODE', 'STAR', 'FIRE', 'NEON', 'ORBIT', 'CYBER', 'LASER', 'PULSE', 'PIXEL', 'ROBOT',
+      'ROCKET', 'COMET', 'PLANET', 'SHIELD', 'VECTOR', 'MATRIX', 'GALAXY', 'COSMIC', 'QUANTUM',
+      'SYSTEM', 'SPHERE', 'HYPER', 'LIGHT', 'SONIC', 'STELLAR', 'BLASTER', 'HORIZON', 'GRAVITY'
+    ];
+
+    let words = [];
+    let particles = [];
+    let laserShots = [];
+    let score = 0;
+    let lives = 3;
+    let wordsCompleted = 0;
+    let startTime = 0;
+    let isPlaying = false;
+    let spawnTimer = 0;
+    let activeTarget = null;
+
+    function spawnWord() {
+      const text = WORD_BANK[Math.floor(Math.random() * WORD_BANK.length)];
+      const x = Math.random() * (canvas.width - 120) + 40;
+      words.push({
+        text: text,
+        x: x,
+        y: 10,
+        speed: 0.6 + Math.min(2.5, wordsCompleted * 0.05),
+        matchedLetters: 0
+      });
+    }
+
+    function createExplosion(x, y, color = '#10b981') {
+      for (let i = 0; i < 16; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 4 + 1;
+        particles.push({
+          x: x,
+          y: y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1,
+          color: color
+        });
+      }
+    }
+
+    typeInput.addEventListener('input', () => {
+      if (!isPlaying) return;
+      const val = typeInput.value.toUpperCase();
+
+      if (!activeTarget) {
+        // Find a word starting with val
+        for (const w of words) {
+          if (w.text.startsWith(val)) {
+            activeTarget = w;
+            w.matchedLetters = val.length;
+            playBeep(520, 'triangle', 0.04);
+            break;
+          }
+        }
+      } else {
+        if (activeTarget.text.startsWith(val)) {
+          activeTarget.matchedLetters = val.length;
+          playBeep(560 + val.length * 30, 'triangle', 0.04);
+
+          // Shoot laser
+          laserShots.push({
+            startX: canvas.width / 2,
+            startY: canvas.height - 20,
+            endX: activeTarget.x,
+            endY: activeTarget.y,
+            life: 8
+          });
+
+          // Completed word!
+          if (val === activeTarget.text) {
+            createExplosion(activeTarget.x, activeTarget.y);
+            score += activeTarget.text.length * 10;
+            wordsCompleted++;
+            scoreVal.innerText = score;
+            playBeep(880, 'sine', 0.12);
+
+            words = words.filter(w => w !== activeTarget);
+            activeTarget = null;
+            typeInput.value = '';
+          }
+        } else {
+          // Mismatch
+          playBeep(200, 'sawtooth', 0.05);
+        }
+      }
+    });
+
+    function update() {
+      if (!isPlaying) return;
+
+      // Spawn words
+      spawnTimer++;
+      if (spawnTimer > Math.max(50, 110 - wordsCompleted * 2)) {
+        spawnWord();
+        spawnTimer = 0;
+      }
+
+      // WPM
+      const minutes = (Date.now() - startTime) / 60000;
+      const wpm = minutes > 0 ? Math.round((wordsCompleted) / minutes) : 0;
+      wpmVal.innerText = wpm;
+
+      // Words movement
+      for (let i = words.length - 1; i >= 0; i--) {
+        const w = words[i];
+        w.y += w.speed;
+
+        // Breached defense
+        if (w.y > canvas.height - 30) {
+          lives--;
+          createExplosion(w.x, w.y, '#ef4444');
+          playBeep(140, 'sawtooth', 0.25);
+          if (activeTarget === w) {
+            activeTarget = null;
+            typeInput.value = '';
+          }
+          words.splice(i, 1);
+          livesVal.innerText = '🛡️'.repeat(Math.max(0, lives));
+
+          if (lives <= 0) {
+            endGame(wpm);
+            return;
+          }
+        }
+      }
+
+      // Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.04;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      // Laser Shots
+      for (let i = laserShots.length - 1; i >= 0; i--) {
+        laserShots[i].life--;
+        if (laserShots[i].life <= 0) laserShots.splice(i, 1);
+      }
+    }
+
+    function draw() {
+      ctx.fillStyle = '#020617';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Defense perimeter line
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height - 30);
+      ctx.lineTo(canvas.width, canvas.height - 30);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Turret base
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height, 30, Math.PI, 0);
+      ctx.fill();
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Lasers
+      laserShots.forEach(ls => {
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(ls.startX, ls.startY);
+        ctx.lineTo(ls.endX, ls.endY);
+        ctx.stroke();
+      });
+
+      // Words
+      words.forEach(w => {
+        const isTarget = w === activeTarget;
+        ctx.font = 'bold 16px monospace';
+        const textWidth = ctx.measureText(w.text).width;
+
+        // Background box
+        ctx.fillStyle = isTarget ? '#0f172a' : '#1e293b';
+        ctx.strokeStyle = isTarget ? '#10b981' : '#334155';
+        ctx.lineWidth = isTarget ? 2 : 1;
+        ctx.fillRect(w.x - 8, w.y - 18, textWidth + 16, 26);
+        ctx.strokeRect(w.x - 8, w.y - 18, textWidth + 16, 26);
+
+        // Word letters
+        const typedPart = w.text.slice(0, w.matchedLetters);
+        const untypedPart = w.text.slice(w.matchedLetters);
+
+        ctx.fillStyle = '#10b981';
+        ctx.fillText(typedPart, w.x, w.y);
+        const typedWidth = ctx.measureText(typedPart).width;
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillText(untypedPart, w.x + typedWidth, w.y);
+      });
+
+      // Particles
+      particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function startGame() {
+      words = [];
+      particles = [];
+      laserShots = [];
+      score = 0;
+      lives = 3;
+      wordsCompleted = 0;
+      spawnTimer = 0;
+      activeTarget = null;
+      startTime = Date.now();
+      scoreVal.innerText = '0';
+      wpmVal.innerText = '0';
+      livesVal.innerText = '🛡️🛡️🛡️';
+      typeInput.value = '';
+      isPlaying = true;
+      startOverlay.classList.add('hidden');
+      gameOverOverlay.classList.add('hidden');
+      typeInput.focus();
+    }
+
+    function endGame(finalWpmCount) {
+      isPlaying = false;
+      finalScore.innerText = score;
+      finalWpm.innerText = finalWpmCount;
+      gameOverOverlay.classList.remove('hidden');
+    }
+
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', startGame);
+
+    gameLoop();
+  </script>
+</body>
+</html>

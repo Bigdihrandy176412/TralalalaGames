@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tralalala Games</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Tralalala Games</h1>
+    <p class="subtitle">Iframe Game Portal loaded via games.json</p>
+    <div class="search-container">
+      <input type="text" id="searchBar" placeholder="Search games..." />
+    </div>
+  </header>
+
+  <main>
+    <div id="gameGrid" class="game-grid">
+      <!-- Game cards are loaded here by script.js -->
+    </div>
+  </main>
+
+  <!-- The Iframe Container (Overlay) -->
+  <div id="gameModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="currentTitle">Game Title</h2>
+        <div class="modal-actions">
+          <button id="openNewTabBtn" class="btn-secondary">Open in New Tab</button>
+          <button id="fullscreenBtn" class="btn-secondary">Fullscreen</button>
+          <button id="closeBtn" class="btn-close">&times; Close</button>
+        </div>
+      </div>
+      <iframe id="gameIframe" src="" frameborder="0" allowfullscreen allow="autoplay; fullscreen; gamepad"></iframe>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

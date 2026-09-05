@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250" width="100%" height="100%">
+  <defs>
+    <linearGradient id="tetrisBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d16" />
+      <stop offset="100%" stop-color="#111827" />
+    </linearGradient>
+    <filter id="blockGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="400" height="250" fill="url(#tetrisBg)" />
+
+  <!-- Tetris Well Matrix (10 x 20 aspect) -->
+  <rect x="130" y="15" width="140" height="220" rx="6" fill="#030712" stroke="#1f2937" stroke-width="2" />
+
+  <!-- Subtle Matrix grid lines -->
+  <g stroke="#111827" stroke-width="0.75">
+    <line x1="144" y1="15" x2="144" y2="235" />
+    <line x1="158" y1="15" x2="158" y2="235" />
+    <line x1="172" y1="15" x2="172" y2="235" />
+    <line x1="186" y1="15" x2="186" y2="235" />
+    <line x1="200" y1="15" x2="200" y2="235" />
+    <line x1="214" y1="15" x2="214" y2="235" />
+    <line x1="228" y1="15" x2="228" y2="235" />
+    <line x1="242" y1="15" x2="242" y2="235" />
+    <line x1="256" y1="15" x2="256" y2="235" />
+  </g>
+
+  <!-- Placed Tetromino Blocks at Bottom of Well -->
+  <!-- Cyan I pieces horizontal at base -->
+  <g filter="url(#blockGlow)">
+    <!-- Base Row -->
+    <rect x="132" y="219" width="13" height="13" rx="2" fill="#06b6d4" stroke="#67e8f9" stroke-width="1" />
+    <rect x="146" y="219" width="13" height="13" rx="2" fill="#06b6d4" stroke="#67e8f9" stroke-width="1" />
+    <rect x="160" y="219" width="13" height="13" rx="2" fill="#06b6d4" stroke="#67e8f9" stroke-width="1" />
+    <rect x="174" y="219" width="13" height="13" rx="2" fill="#06b6d4" stroke="#67e8f9" stroke-width="1" />
+
+    <!-- Red Z Piece -->
+    <rect x="188" y="219" width="13" height="13" rx="2" fill="#ef4444" stroke="#fca5a5" stroke-width="1" />
+    <rect x="202" y="219" width="13" height="13" rx="2" fill="#ef4444" stroke="#fca5a5" stroke-width="1" />
+    <rect x="202" y="205" width="13" height="13" rx="2" fill="#ef4444" stroke="#fca5a5" stroke-width="1" />
+    <rect x="216" y="205" width="13" height="13" rx="2" fill="#ef4444" stroke="#fca5a5" stroke-width="1" />
+
+    <!-- Blue J Piece -->
+    <rect x="230" y="219" width="13" height="13" rx="2" fill="#3b82f6" stroke="#93c5fd" stroke-width="1" />
+    <rect x="244" y="219" width="13" height="13" rx="2" fill="#3b82f6" stroke="#93c5fd" stroke-width="1" />
+    <rect x="244" y="205" width="13" height="13" rx="2" fill="#3b82f6" stroke="#93c5fd" stroke-width="1" />
+    <rect x="244" y="191" width="13" height="13" rx="2" fill="#3b82f6" stroke="#93c5fd" stroke-width="1" />
+
+    <!-- Yellow O Piece (Square) -->
+    <rect x="132" y="205" width="13" height="13" rx="2" fill="#eab308" stroke="#fef08a" stroke-width="1" />
+    <rect x="146" y="205" width="13" height="13" rx="2" fill="#eab308" stroke="#fef08a" stroke-width="1" />
+    <rect x="132" y="191" width="13" height="13" rx="2" fill="#eab308" stroke="#fef08a" stroke-width="1" />
+    <rect x="146" y="191" width="13" height="13" rx="2" fill="#eab308" stroke="#fef08a" stroke-width="1" />
+
+    <!-- Green S Piece -->
+    <rect x="174" y="205" width="13" height="13" rx="2" fill="#22c55e" stroke="#86efac" stroke-width="1" />
+    <rect x="160" y="205" width="13" height="13" rx="2" fill="#22c55e" stroke="#86efac" stroke-width="1" />
+    <rect x="160" y="191" width="13" height="13" rx="2" fill="#22c55e" stroke="#86efac" stroke-width="1" />
+    <rect x="174" y="177" width="13" height="13" rx="2" fill="#22c55e" stroke="#86efac" stroke-width="1" />
+
+    <!-- Orange L Piece -->
+    <rect x="202" y="191" width="13" height="13" rx="2" fill="#f97316" stroke="#fdba74" stroke-width="1" />
+    <rect x="216" y="191" width="13" height="13" rx="2" fill="#f97316" stroke="#fdba74" stroke-width="1" />
+    <rect x="216" y="177" width="13" height="13" rx="2" fill="#f97316" stroke="#fdba74" stroke-width="1" />
+    <rect x="216" y="163" width="13" height="13" rx="2" fill="#f97316" stroke="#fdba74" stroke-width="1" />
+
+    <!-- Active Falling Purple T Piece with Drop Ghost Trail -->
+    <!-- Ghost -->
+    <rect x="174" y="149" width="13" height="13" rx="2" fill="none" stroke="#a855f7" stroke-dasharray="2,2" stroke-width="1" opacity="0.4" />
+    <rect x="188" y="149" width="13" height="13" rx="2" fill="none" stroke="#a855f7" stroke-dasharray="2,2" stroke-width="1" opacity="0.4" />
+    <rect x="202" y="149" width="13" height="13" rx="2" fill="none" stroke="#a855f7" stroke-dasharray="2,2" stroke-width="1" opacity="0.4" />
+    <rect x="188" y="163" width="13" height="13" rx="2" fill="none" stroke="#a855f7" stroke-dasharray="2,2" stroke-width="1" opacity="0.4" />
+
+    <!-- Falling T-Piece -->
+    <rect x="174" y="75" width="13" height="13" rx="2" fill="#a855f7" stroke="#d8b4fe" stroke-width="1" />
+    <rect x="188" y="75" width="13" height="13" rx="2" fill="#a855f7" stroke="#d8b4fe" stroke-width="1" />
+    <rect x="202" y="75" width="13" height="13" rx="2" fill="#a855f7" stroke="#d8b4fe" stroke-width="1" />
+    <rect x="188" y="89" width="13" height="13" rx="2" fill="#a855f7" stroke="#d8b4fe" stroke-width="1" />
+  </g>
+
+  <!-- Left Sidebar (Hold Piece) -->
+  <rect x="25" y="25" width="85" height="75" rx="6" fill="#0f172a" stroke="#1f2937" stroke-width="1.5" />
+  <text x="67" y="42" fill="#94a3b8" font-family="monospace" font-size="10" font-weight="700" text-anchor="middle">HOLD</text>
+  <!-- Mini Cyan I in Hold -->
+  <rect x="42" y="60" width="10" height="10" rx="1.5" fill="#06b6d4" />
+  <rect x="53" y="60" width="10" height="10" rx="1.5" fill="#06b6d4" />
+  <rect x="64" y="60" width="10" height="10" rx="1.5" fill="#06b6d4" />
+  <rect x="75" y="60" width="10" height="10" rx="1.5" fill="#06b6d4" />
+
+  <!-- Score Info on Left -->
+  <rect x="25" y="115" width="85" height="55" rx="6" fill="#0f172a" stroke="#1f2937" stroke-width="1.5" />
+  <text x="67" y="132" fill="#94a3b8" font-family="monospace" font-size="10" font-weight="700" text-anchor="middle">SCORE</text>
+  <text x="67" y="153" fill="#38bdf8" font-family="monospace" font-size="14" font-weight="800" text-anchor="middle">18,400</text>
+
+  <!-- Right Sidebar (Next Pieces) -->
+  <rect x="290" y="25" width="85" height="120" rx="6" fill="#0f172a" stroke="#1f2937" stroke-width="1.5" />
+  <text x="332" y="42" fill="#94a3b8" font-family="monospace" font-size="10" font-weight="700" text-anchor="middle">NEXT</text>
+  <!-- Next 1: Yellow O -->
+  <rect x="321" y="55" width="10" height="10" rx="1.5" fill="#eab308" />
+  <rect x="332" y="55" width="10" height="10" rx="1.5" fill="#eab308" />
+  <rect x="321" y="66" width="10" height="10" rx="1.5" fill="#eab308" />
+  <rect x="332" y="66" width="10" height="10" rx="1.5" fill="#eab308" />
+  <!-- Next 2: Green S -->
+  <rect x="332" y="95" width="9" height="9" rx="1.5" fill="#22c55e" />
+  <rect x="342" y="95" width="9" height="9" rx="1.5" fill="#22c55e" />
+  <rect x="322" y="105" width="9" height="9" rx="1.5" fill="#22c55e" />
+  <rect x="332" y="105" width="9" height="9" rx="1.5" fill="#22c55e" />
+
+  <!-- Lines Cleared -->
+  <rect x="290" y="160" width="85" height="55" rx="6" fill="#0f172a" stroke="#1f2937" stroke-width="1.5" />
+  <text x="332" y="177" fill="#94a3b8" font-family="monospace" font-size="10" font-weight="700" text-anchor="middle">LINES</text>
+  <text x="332" y="198" fill="#10b981" font-family="monospace" font-size="14" font-weight="800" text-anchor="middle">24</text>
+</svg>

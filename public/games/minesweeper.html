@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grid Sweeper</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 12px;
+    }
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 380px;
+      margin-bottom: 12px;
+      background: #1e293b;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+    }
+    .hud span { font-weight: 800; font-size: 1.1rem; color: #38bdf8; }
+    .hud button {
+      background: #38bdf8;
+      color: #0f172a;
+      border: none;
+      padding: 6px 14px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(9, 36px);
+      grid-gap: 3px;
+      background: #1e293b;
+      padding: 8px;
+      border-radius: 8px;
+      border: 2px solid #334155;
+    }
+    .tile {
+      width: 36px;
+      height: 36px;
+      background: #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .tile:hover { background: #475569; }
+    .tile.revealed { background: #0f172a; cursor: default; }
+    .tile.mine { background: #ef4444; color: #fff; }
+    .tile.flag { color: #f59e0b; }
+    .tile[data-num="1"] { color: #38bdf8; }
+    .tile[data-num="2"] { color: #4ade80; }
+    .tile[data-num="3"] { color: #f87171; }
+    .tile[data-num="4"] { color: #c084fc; }
+    .hint { margin-top: 12px; color: #94a3b8; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div>MINES: <span id="minesCount">10</span></div>
+    <button onclick="init()">Restart</button>
+    <div>TIME: <span id="timer">0</span>s</div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <div class="hint">Left click to uncover &bull; Right click to flag</div>
+
+  <script>
+    const ROWS = 9;
+    const COLS = 9;
+    const MINES = 10;
+    const gridEl = document.getElementById('grid');
+    const minesCountEl = document.getElementById('minesCount');
+    const timerEl = document.getElementById('timer');
+
+    let board = [];
+    let revealedCount = 0;
+    let flags = 0;
+    let gameOver = false;
+    let timer = 0;
+    let timerInterval = null;
+
+    function init() {
+      board = [];
+      revealedCount = 0;
+      flags = 0;
+      gameOver = false;
+      timer = 0;
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => { timer++; timerEl.textContent = timer; }, 1000);
+      timerEl.textContent = 0;
+      minesCountEl.textContent = MINES;
+
+      gridEl.innerHTML = '';
+      for (let r = 0; r < ROWS; r++) {
+        board[r] = [];
+        for (let c = 0; c < COLS; c++) {
+          board[r][c] = { mine: false, revealed: false, flagged: false, count: 0 };
+          const el = document.createElement('div');
+          el.className = 'tile';
+          el.id = `tile-${r}-${c}`;
+          el.addEventListener('click', () => reveal(r, c));
+          el.addEventListener('contextmenu', (e) => { e.preventDefault(); toggleFlag(r, c); });
+          gridEl.appendChild(el);
+        }
+      }
+
+      // Plant mines
+      let planted = 0;
+      while (planted < MINES) {
+        let r = Math.floor(Math.random() * ROWS);
+        let c = Math.floor(Math.random() * COLS);
+        if (!board[r][c].mine) {
+          board[r][c].mine = true;
+          planted++;
+        }
+      }
+
+      // Calculate neighbor counts
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (!board[r][c].mine) {
+            let count = 0;
+            for (let dr = -1; dr <= 1; dr++) {
+              for (let dc = -1; dc <= 1; dc++) {
+                let nr = r + dr, nc = c + dc;
+                if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && board[nr][nc].mine) count++;
+              }
+            }
+            board[r][c].count = count;
+          }
+        }
+      }
+    }
+
+    function toggleFlag(r, c) {
+      if (gameOver || board[r][c].revealed) return;
+      board[r][c].flagged = !board[r][c].flagged;
+      const el = document.getElementById(`tile-${r}-${c}`);
+      if (board[r][c].flagged) {
+        el.classList.add('flag');
+        el.textContent = '🚩';
+        flags++;
+      } else {
+        el.classList.remove('flag');
+        el.textContent = '';
+        flags--;
+      }
+      minesCountEl.textContent = MINES - flags;
+    }
+
+    function reveal(r, c) {
+      if (gameOver || board[r][c].revealed || board[r][c].flagged) return;
+
+      const cell = board[r][c];
+      const el = document.getElementById(`tile-${r}-${c}`);
+      cell.revealed = true;
+      el.classList.add('revealed');
+
+      if (cell.mine) {
+        el.classList.add('mine');
+        el.textContent = '💣';
+        endGame(false);
+        return;
+      }
+
+      revealedCount++;
+      if (cell.count > 0) {
+        el.textContent = cell.count;
+        el.setAttribute('data-num', cell.count);
+      } else {
+        // Flood fill empty neighbors
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            let nr = r + dr, nc = c + dc;
+            if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+              reveal(nr, nc);
+            }
+          }
+        }
+      }
+
+      if (revealedCount === ROWS * COLS - MINES) {
+        endGame(true);
+      }
+    }
+
+    function endGame(won) {
+      gameOver = true;
+      clearInterval(timerInterval);
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (board[r][c].mine) {
+            const el = document.getElementById(`tile-${r}-${c}`);
+            el.textContent = '💣';
+          }
+        }
+      }
+      setTimeout(() => {
+        alert(won ? '🎉 Victory! Minefield cleared.' : '💥 Boom! You clicked a mine.');
+      }, 100);
+    }
+
+    init();
+  </script>
+</body>
+</html>

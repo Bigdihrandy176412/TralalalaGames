@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250" width="100%" height="100%">
+  <defs>
+    <radialGradient id="skyGrad" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#1e1b4b" />
+      <stop offset="60%" stop-color="#090d16" />
+      <stop offset="100%" stop-color="#020617" />
+    </radialGradient>
+    <linearGradient id="trackGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="kartBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0369a1" />
+    </linearGradient>
+    <filter id="boxGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#facc15" flood-opacity="0.9"/>
+    </filter>
+    <filter id="rocketGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#f43f5e" flood-opacity="0.85"/>
+    </filter>
+  </defs>
+
+  <!-- Arena Background -->
+  <rect width="400" height="250" fill="url(#skyGrad)" />
+
+  <!-- Distant Arena Neon Border Towers -->
+  <g opacity="0.6">
+    <rect x="30" y="40" width="12" height="70" fill="#0284c7" rx="2" />
+    <circle cx="36" cy="38" r="4" fill="#38bdf8" />
+    <rect x="360" y="40" width="12" height="70" fill="#dc2626" rx="2" />
+    <circle cx="366" cy="38" r="4" fill="#f87171" />
+  </g>
+
+  <!-- Arena Grid Ground / Perspective Track -->
+  <polygon points="0,250 400,250 360,110 40,110" fill="url(#trackGrad)" stroke="#334155" stroke-width="1.5" />
+  <!-- Neon track stripes & rumble strips -->
+  <line x1="200" y1="110" x2="200" y2="250" stroke="#facc15" stroke-width="3" stroke-dasharray="12,8" opacity="0.8" />
+  <!-- Red/White curb edges -->
+  <polygon points="40,110 30,113 0,250 15,250" fill="#ef4444" />
+  <polygon points="360,110 370,113 400,250 385,250" fill="#ef4444" />
+
+  <!-- Skid Marks on Road -->
+  <path d="M 130 180 Q 150 200 170 215" fill="none" stroke="#000" stroke-width="8" opacity="0.35" stroke-linecap="round" />
+  <path d="M 155 180 Q 175 200 195 215" fill="none" stroke="#000" stroke-width="8" opacity="0.35" stroke-linecap="round" />
+
+  <!-- Mystery Box Floating (Spinning 3D Cube with ?) -->
+  <g transform="translate(90, 130)" filter="url(#boxGlow)">
+    <!-- Cube faces -->
+    <!-- Top Face -->
+    <polygon points="0,-18 20,-28 0,-38 -20,-28" fill="#fde047" stroke="#ca8a04" stroke-width="1.5" />
+    <!-- Left Face -->
+    <polygon points="-20,-28 0,-18 0,8 -20,-2" fill="#eab308" stroke="#ca8a04" stroke-width="1.5" />
+    <!-- Right Face -->
+    <polygon points="0,-18 20,-28 20,-2 0,8" fill="#facc15" stroke="#ca8a04" stroke-width="1.5" />
+    <!-- Question Mark '?' in Box -->
+    <text x="10" y="-8" fill="#713f12" font-family="Impact, sans-serif" font-weight="900" font-size="16" text-anchor="middle">?</text>
+    <!-- Shadow beneath box -->
+    <ellipse cx="0" cy="22" rx="14" ry="4" fill="#000" opacity="0.4" />
+  </g>
+
+  <!-- Rival Enemy Kart (Red/Orange) fleeing/blasted in background -->
+  <g transform="translate(300, 125) scale(0.65)">
+    <!-- Kart Body -->
+    <rect x="-24" y="-12" width="48" height="26" rx="6" fill="#dc2626" stroke="#991b1b" stroke-width="2" />
+    <!-- Wheels -->
+    <rect x="-28" y="-16" width="10" height="12" rx="3" fill="#0f172a" />
+    <rect x="18" y="-16" width="10" height="12" rx="3" fill="#0f172a" />
+    <rect x="-28" y="10" width="10" height="12" rx="3" fill="#0f172a" />
+    <rect x="18" y="10" width="10" height="12" rx="3" fill="#0f172a" />
+    <!-- Driver helmet -->
+    <circle cx="0" cy="-2" r="10" fill="#fbbf24" />
+    <!-- Mini health bar -->
+    <rect x="-20" y="-24" width="40" height="5" fill="#334155" rx="2" />
+    <rect x="-20" y="-24" width="14" height="5" fill="#ef4444" rx="2" />
+  </g>
+
+  <!-- Homing Rocket in Mid-Air fired towards rival -->
+  <g transform="translate(245, 145) rotate(-18)" filter="url(#rocketGlow)">
+    <!-- Rocket Thruster Fire -->
+    <path d="M -16 0 L -28 -5 L -24 0 L -28 5 Z" fill="#f97316" />
+    <path d="M -16 0 L -22 -3 L -20 0 L -22 3 Z" fill="#fef08a" />
+    <!-- Smoke particles -->
+    <circle cx="-32" cy="-2" r="4" fill="#94a3b8" opacity="0.6" />
+    <circle cx="-42" cy="-5" r="6" fill="#94a3b8" opacity="0.4" />
+    <!-- Rocket Main Shell -->
+    <rect x="-14" y="-7" width="22" height="14" rx="3" fill="#ef4444" stroke="#b91c1c" stroke-width="1.5" />
+    <!-- Shark tooth nose / warhead cone -->
+    <polygon points="8,-7 20,0 8,7" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+    <!-- Fins -->
+    <polygon points="-12,-7 -16,-12 -8,-7" fill="#1e293b" />
+    <polygon points="-12,7 -16,12 -8,7" fill="#1e293b" />
+  </g>
+
+  <!-- Main Hero Kart (Blue Kart drifting towards viewer) -->
+  <g transform="translate(180, 185)">
+    <!-- Nitro Exhaust Flames -->
+    <path d="M -14 26 L -18 42 L -12 36 L -8 40 Z" fill="#38bdf8" />
+    <path d="M 8 26 L 6 40 L 10 36 L 14 42 Z" fill="#38bdf8" />
+    <!-- Drift sparks & smoke -->
+    <circle cx="-38" cy="18" r="6" fill="#e2e8f0" opacity="0.7" />
+    <circle cx="-48" cy="14" r="9" fill="#94a3b8" opacity="0.5" />
+    <circle cx="34" cy="20" r="5" fill="#facc15" />
+    <circle cx="42" cy="16" r="3" fill="#f59e0b" />
+
+    <!-- Big Chunky Kart Wheels -->
+    <rect x="-42" y="-12" width="14" height="26" rx="4" fill="#0f172a" stroke="#475569" stroke-width="1.5" />
+    <rect x="28" y="-12" width="14" height="26" rx="4" fill="#0f172a" stroke="#475569" stroke-width="1.5" />
+    <rect x="-40" y="10" width="14" height="26" rx="4" fill="#0f172a" stroke="#475569" stroke-width="1.5" />
+    <rect x="26" y="10" width="14" height="26" rx="4" fill="#0f172a" stroke="#475569" stroke-width="1.5" />
+
+    <!-- Kart Chassis / Body -->
+    <rect x="-30" y="-16" width="60" height="42" rx="10" fill="url(#kartBody)" stroke="#38bdf8" stroke-width="2" />
+    <!-- Racing Stripes -->
+    <rect x="-5" y="-16" width="10" height="42" fill="#ffffff" opacity="0.9" />
+    <!-- Front Bumper -->
+    <rect x="-26" y="-24" width="52" height="10" rx="3" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5" />
+    <!-- Rear Spoiler Wing -->
+    <rect x="-32" y="24" width="64" height="8" rx="2" fill="#0284c7" stroke="#38bdf8" stroke-width="1.5" />
+
+    <!-- Driver (Cute Racer with Helmet & Visor) -->
+    <circle cx="0" cy="2" r="14" fill="#10b981" stroke="#047857" stroke-width="2" />
+    <!-- Helmet Visor -->
+    <ellipse cx="0" cy="0" rx="9" ry="5" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5" />
+    <ellipse cx="-3" cy="-1" rx="3" ry="1.5" fill="#ffffff" opacity="0.8" />
+    <!-- Steering Wheel -->
+    <ellipse cx="0" cy="-8" rx="7" ry="3" fill="none" stroke="#f8fafc" stroke-width="2" />
+
+    <!-- Player HP Bar Above Kart -->
+    <rect x="-28" y="-36" width="56" height="6" rx="3" fill="#0f172a" stroke="#334155" stroke-width="1" />
+    <rect x="-27" y="-35" width="48" height="4" rx="2" fill="#10b981" />
+  </g>
+
+  <!-- Top Title & HUD -->
+  <text x="20" y="32" fill="#38bdf8" font-family="Impact, sans-serif" font-size="20" letter-spacing="1">SMASH KARTS</text>
+  <g transform="translate(330, 22)">
+    <rect x="-40" y="-10" width="80" height="22" rx="5" fill="#090d16" stroke="#38bdf8" stroke-width="1.5" />
+    <text x="0" y="5" fill="#facc15" font-family="monospace" font-weight="900" font-size="12" text-anchor="middle">5 KILLS</text>
+  </g>
+</svg>

@@ -1,0 +1,226 @@
+[
+  {
+    "id": "basket-random",
+    "title": "Basket Random",
+    "category": "Sports",
+    "description": "The real Basket Random by RHM Interactive! Hilarious 2-on-2 ragdoll physics basketball with randomized bouncy balls, changing courts, outfits, and bouncy hoops. Solo vs CPU or 2-player local!",
+    "controls": "P1: W or Tap | P2: Up Arrow or Tap | First to 5 points wins!",
+    "image": "/thumbnails/basket-random.svg",
+    "url": "https://html5.gamedistribution.com/bf1268dccb5d43e7970bb3edaa54afc8/",
+    "backupUrl": "/games/basket-random.html",
+    "featured": true,
+    "isRealGame": true,
+    "realSource": "Official GameDistribution"
+  },
+  {
+    "id": "smash-karts",
+    "title": "Smash Karts",
+    "category": "Action",
+    "description": "The real Smash Karts 3D battle royale by Tall Team! Race into the arena, drift, grab mystery boxes, and eliminate opponents with homing rockets, spike mines, and cannons!",
+    "controls": "WASD / Arrows to Drive | Space to Fire Weapon | Shift to Drift",
+    "image": "/thumbnails/smash-karts.svg",
+    "url": "https://ghp1tallteam.github.io",
+    "backupUrl": "/games/smash-karts.html",
+    "featured": true,
+    "isRealGame": true,
+    "realSource": "Official Tall Team"
+  },
+  {
+    "id": "slope",
+    "title": "Slope",
+    "category": "Action",
+    "description": "The real 3D Slope game! Roll down an infinite, randomized neon slope dodging obstacles, red blocks, and narrow ramps at breakneck speeds.",
+    "controls": "A/D or Left/Right Arrow keys to steer the ball",
+    "image": "/thumbnails/slope.svg",
+    "url": "https://catfoolyou.github.io/Slope/",
+    "featured": true,
+    "isRealGame": true,
+    "realSource": "Unity WebGL"
+  },
+  {
+    "id": "retro-bowl",
+    "title": "Retro Bowl",
+    "category": "Sports",
+    "description": "The real Retro Bowl by New Star Games! Be the boss of your NFL franchise, manage your roster, draft stars, and take the field in glorious 8-bit retro football.",
+    "controls": "Click & drag with Mouse to aim and throw pass; tap to dive",
+    "image": "/thumbnails/retro-bowl.svg",
+    "url": "https://game316009.konggames.com/gamez/0031/6009/live/index.html",
+    "featured": true,
+    "isRealGame": true,
+    "realSource": "New Star Games / Kongregate"
+  },
+  {
+    "id": "soccer-random",
+    "title": "Soccer Random",
+    "category": "Sports",
+    "description": "The real Soccer Random by RHM Interactive! Chaotic ragdoll soccer with changing weather, different bouncy balls, and funny physics. First to 5 goals wins!",
+    "controls": "P1: W or Tap | P2: Up Arrow or Tap",
+    "image": "/thumbnails/soccer-random.svg",
+    "url": "https://soccer-randomx.github.io/soccer-random/",
+    "featured": true,
+    "isRealGame": true,
+    "realSource": "Official RHM Interactive"
+  },
+  {
+    "id": "subway-surfers",
+    "title": "Subway Surfers",
+    "category": "Action",
+    "description": "The real Subway Surfers endless runner! Dash as fast as you can through subway tracks, dodge oncoming trains, and collect gold coins and hoverboards.",
+    "controls": "Arrow keys / WASD: Left/Right to change lanes, Up to jump, Down to roll",
+    "image": "/thumbnails/subway-surfers.svg",
+    "url": "https://subwaysurfers76.github.io/",
+    "featured": true,
+    "isRealGame": true,
+    "realSource": "SYBO / Kiloo HTML5"
+  },
+  {
+    "id": "2048",
+    "title": "2048",
+    "category": "Puzzle",
+    "description": "Join the numbers and get to the 2048 tile in this addictive puzzle game.",
+    "controls": "Arrow keys or Swipe to slide tiles",
+    "image": "/thumbnails/2048.svg",
+    "url": "/games/2048.html",
+    "featured": true
+  },
+  {
+    "id": "neon-snake",
+    "title": "Neon Snake",
+    "category": "Arcade",
+    "description": "Slither around the grid eating energy orbs to grow longer. Don't hit the walls or yourself!",
+    "controls": "Arrow Keys or WASD to navigate",
+    "image": "/thumbnails/snake.svg",
+    "url": "/games/snake.html",
+    "featured": true
+  },
+  {
+    "id": "flappy-bird",
+    "title": "Flappy Pixel",
+    "category": "Arcade",
+    "description": "Flap your wings to dodge pipes and navigate through obstacles. How high can you score?",
+    "controls": "Spacebar or Click / Tap to jump",
+    "image": "/thumbnails/flappy.svg",
+    "url": "/games/flappy.html",
+    "featured": true
+  },
+  {
+    "id": "block-stacker",
+    "title": "Block Stacker",
+    "category": "Classic",
+    "description": "Drop and rotate tetromino shapes, clear horizontal lines, and set high scores in this classic stacker.",
+    "controls": "Left/Right to move, Up/X to rotate, Space for hard drop, C to hold",
+    "image": "/thumbnails/tetris.svg",
+    "url": "/games/tetris.html",
+    "featured": true
+  },
+  {
+    "id": "dino-runner",
+    "title": "T-Rex Runner",
+    "category": "Arcade",
+    "description": "Sprint through the prehistoric desert, jump cacti, and duck under flying pterodactyls.",
+    "controls": "Space or Up to jump, Down to duck, Tap on mobile",
+    "image": "/thumbnails/dino.svg",
+    "url": "/games/dino.html",
+    "featured": true
+  },
+  {
+    "id": "pac-chomper",
+    "title": "Pac-Chomper",
+    "category": "Classic",
+    "description": "Navigate neon maze corridors eating dots and power pellets while evading or hunting roaming ghosts.",
+    "controls": "Arrow keys or WASD to turn, or On-Screen D-Pad",
+    "image": "/thumbnails/pacman.svg",
+    "url": "/games/pacman.html",
+    "featured": true
+  },
+  {
+    "id": "retro-breakout",
+    "title": "Retro Breakout",
+    "category": "Classic",
+    "description": "Bounce the ball off your paddle to smash all colored bricks and trigger power-ups.",
+    "controls": "Mouse or Left/Right arrows to move paddle",
+    "image": "/thumbnails/breakout.svg",
+    "url": "/games/breakout.html",
+    "featured": false
+  },
+  {
+    "id": "space-invader",
+    "title": "Cosmic Defender",
+    "category": "Action",
+    "description": "Defend the galaxy against relentless alien waves and cosmic invaders.",
+    "controls": "A/D or Left/Right to steer, Spacebar to fire lasers",
+    "image": "/thumbnails/space-shooter.svg",
+    "url": "/games/space-shooter.html",
+    "featured": true
+  },
+  {
+    "id": "speed-typer",
+    "title": "Speed Word Defender",
+    "category": "Action",
+    "description": "Type incoming space words to trigger laser defenses and protect your base from falling hazards.",
+    "controls": "Type words on keyboard, press Enter to submit",
+    "image": "/thumbnails/typing.svg",
+    "url": "/games/typing.html",
+    "featured": false
+  },
+  {
+    "id": "memory-match",
+    "title": "Memory Match",
+    "category": "Puzzle",
+    "description": "Test your cognitive recall by flipping tiles to uncover and match identical pairs in minimum turns.",
+    "controls": "Click or tap cards to flip and match",
+    "image": "/thumbnails/memory.svg",
+    "url": "/games/memory.html",
+    "featured": false
+  },
+  {
+    "id": "cyber-pong",
+    "title": "Cyber Pong",
+    "category": "Retro",
+    "description": "The arcade classic reimagined with crisp synthwave physics and adaptive CPU difficulty.",
+    "controls": "Mouse or W/S to move paddle",
+    "image": "/thumbnails/pong.svg",
+    "url": "/games/pong.html",
+    "featured": false
+  },
+  {
+    "id": "doodle-jump",
+    "title": "Sky Jumper",
+    "category": "Arcade",
+    "description": "Bounce on springs and platforms endlessly into the stratosphere. Avoid falling!",
+    "controls": "Left/Right arrow keys or A/D",
+    "image": "/thumbnails/doodle-jump.svg",
+    "url": "/games/doodle-jump.html",
+    "featured": false
+  },
+  {
+    "id": "minesweeper",
+    "title": "Grid Sweeper",
+    "category": "Puzzle",
+    "description": "Clear the minefield using deduction and numerical clues. Don't detonate the bombs!",
+    "controls": "Left click to uncover, Right click to flag",
+    "image": "/thumbnails/minesweeper.svg",
+    "url": "/games/minesweeper.html",
+    "featured": false
+  },
+  {
+    "id": "cookie-clicker",
+    "title": "Cookie Clicker",
+    "category": "Clicker",
+    "description": "Click the giant chocolate chip cookie, hire baker grandmas, construct cookie farms, and trigger golden cookie frenzies!",
+    "controls": "Click or tap the cookie to bake; purchase upgrades & buildings",
+    "image": "/thumbnails/cookie-clicker.svg",
+    "url": "/games/cookie-clicker.html",
+    "featured": true
+  },
+  {
+    "id": "planet-clicker",
+    "title": "Planet Clicker",
+    "category": "Clicker",
+    "description": "Harvest cosmic energy from Earth, colonize the Moon and Mars, construct Dyson swarms, and intercept solar flares!",
+    "controls": "Click or tap celestial planets to generate energy; build installations",
+    "image": "/thumbnails/planet-clicker.svg",
+    "url": "/games/planet-clicker.html",
+    "featured": true
+  }
+]

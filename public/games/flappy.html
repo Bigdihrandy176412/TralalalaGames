@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flappy Pixel</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: #0f172a;
+      color: white;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 12px;
+    }
+    .wrapper {
+      position: relative;
+      border: 3px solid #38bdf8;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.25);
+    }
+    canvas {
+      display: block;
+      background: #70c5ce;
+      cursor: pointer;
+    }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+    .btn {
+      background: #38bdf8;
+      color: #0f172a;
+      border: none;
+      padding: 10px 24px;
+      font-weight: 800;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .hint { margin-top: 10px; color: #94a3b8; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <canvas id="canvas" width="360" height="520"></canvas>
+    <div class="overlay" id="startScreen">
+      <h2 style="font-size: 2rem; color: #38bdf8;">Flappy Pixel</h2>
+      <p style="color: #cbd5e1;">Tap or press Space to flap!</p>
+      <button class="btn" onclick="start()">START GAME</button>
+    </div>
+    <div class="overlay" id="gameOverScreen">
+      <h2 style="font-size: 2rem; color: #ef4444;">GAME OVER</h2>
+      <p style="color: #cbd5e1;">Score: <span id="scoreVal">0</span></p>
+      <p style="color: #f59e0b;">Best: <span id="bestVal">0</span></p>
+      <button class="btn" onclick="start()">PLAY AGAIN</button>
+    </div>
+  </div>
+  <div class="hint">Press Spacebar or Click anywhere to Flap</div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const startScreen = document.getElementById('startScreen');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const scoreVal = document.getElementById('scoreVal');
+    const bestVal = document.getElementById('bestVal');
+
+    let state = 'READY'; // READY, PLAYING, GAMEOVER
+    let bird = { x: 60, y: 250, vy: 0, gravity: 0.38, jump: -7.5, size: 16 };
+    let pipes = [];
+    let frame = 0;
+    let score = 0;
+    let best = localStorage.getItem('flappy_best') || 0;
+    bestVal.textContent = best;
+
+    function reset() {
+      bird.y = 240;
+      bird.vy = 0;
+      pipes = [];
+      score = 0;
+      frame = 0;
+    }
+
+    function start() {
+      reset();
+      state = 'PLAYING';
+      startScreen.classList.remove('show');
+      gameOverScreen.classList.remove('show');
+    }
+
+    function flap() {
+      if (state === 'READY') {
+        start();
+      } else if (state === 'PLAYING') {
+        bird.vy = bird.jump;
+      }
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    function update() {
+      if (state !== 'PLAYING') return;
+
+      frame++;
+      bird.vy += bird.gravity;
+      bird.y += bird.vy;
+
+      // Spawn pipes
+      if (frame % 95 === 0) {
+        let gap = 130;
+        let topHeight = Math.floor(Math.random() * (canvas.height - gap - 140)) + 40;
+        pipes.push({
+          x: canvas.width,
+          top: topHeight,
+          bottom: topHeight + gap,
+          passed: false
+        });
+      }
+
+      // Update pipes
+      for (let i = pipes.length - 1; i >= 0; i--) {
+        let p = pipes[i];
+        p.x -= 2.6;
+
+        // Collision Check
+        let birdLeft = bird.x - bird.size;
+        let birdRight = bird.x + bird.size;
+        let birdTop = bird.y - bird.size;
+        let birdBottom = bird.y + bird.size;
+
+        if (birdRight > p.x && birdLeft < p.x + 52) {
+          if (birdTop < p.top || birdBottom > p.bottom) {
+            die();
+            return;
+          }
+        }
+
+        if (!p.passed && p.x + 52 < bird.x) {
+          p.passed = true;
+          score++;
+        }
+
+        if (p.x < -60) pipes.splice(i, 1);
+      }
+
+      // Ground / Ceiling
+      if (bird.y + bird.size >= canvas.height - 40 || bird.y - bird.size <= 0) {
+        die();
+      }
+    }
+
+    function die() {
+      state = 'GAMEOVER';
+      scoreVal.textContent = score;
+      if (score > best) {
+        best = score;
+        localStorage.setItem('flappy_best', best);
+      }
+      bestVal.textContent = best;
+      gameOverScreen.classList.add('show');
+    }
+
+    function draw() {
+      // Sky background
+      ctx.fillStyle = '#60a5fa';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Clouds
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.beginPath();
+      ctx.arc(80, 100, 30, 0, Math.PI * 2);
+      ctx.arc(120, 100, 40, 0, Math.PI * 2);
+      ctx.arc(160, 100, 30, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Pipes
+      pipes.forEach(p => {
+        ctx.fillStyle = '#22c55e';
+        ctx.strokeStyle = '#15803d';
+        ctx.lineWidth = 3;
+        // Top pipe
+        ctx.fillRect(p.x, 0, 52, p.top);
+        ctx.strokeRect(p.x, 0, 52, p.top);
+        // Pipe lips
+        ctx.fillRect(p.x - 4, p.top - 18, 60, 18);
+        ctx.strokeRect(p.x - 4, p.top - 18, 60, 18);
+
+        // Bottom pipe
+        ctx.fillRect(p.x, p.bottom, 52, canvas.height - p.bottom);
+        ctx.strokeRect(p.x, p.bottom, 52, canvas.height - p.bottom);
+        // Bottom lip
+        ctx.fillRect(p.x - 4, p.bottom, 60, 18);
+        ctx.strokeRect(p.x - 4, p.bottom, 60, 18);
+      });
+
+      // Ground
+      ctx.fillStyle = '#84cc16';
+      ctx.fillRect(0, canvas.height - 40, canvas.width, 10);
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
+
+      // Bird
+      ctx.save();
+      ctx.translate(bird.x, bird.y);
+      let angle = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, bird.vy * 0.08));
+      ctx.rotate(angle);
+      // Bird body
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.arc(0, 0, bird.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ca8a04';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Eye
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(6, -4, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.arc(8, -4, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Beak
+      ctx.fillStyle = '#f97316';
+      ctx.beginPath();
+      ctx.moveTo(12, -2);
+      ctx.lineTo(20, 2);
+      ctx.lineTo(12, 6);
+      ctx.fill();
+
+      // Wing
+      ctx.fillStyle = '#eab308';
+      ctx.beginPath();
+      ctx.ellipse(-6, 2, 8, 5, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+
+      // Score counter
+      if (state === 'PLAYING') {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '800 36px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#000000';
+        ctx.shadowBlur = 6;
+        ctx.fillText(score, canvas.width / 2, 60);
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    window.addEventListener('keydown', e => {
+      if (e.code === 'Space' || e.code === 'ArrowUp') {
+        e.preventDefault();
+        flap();
+      }
+    });
+
+    canvas.addEventListener('mousedown', flap);
+    canvas.addEventListener('touchstart', e => {
+      e.preventDefault();
+      flap();
+    }, { passive: false });
+
+    startScreen.classList.add('show');
+    loop();
+  </script>
+</body>
+</html>

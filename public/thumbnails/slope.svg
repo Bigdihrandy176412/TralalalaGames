@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250" width="100%" height="100%">
+  <defs>
+    <linearGradient id="slopeSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#020617" />
+      <stop offset="60%" stop-color="#090d16" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="neonTrack" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#064e3b" />
+      <stop offset="50%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+    <radialGradient id="neonBall" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#a7f3d0" />
+      <stop offset="40%" stop-color="#34d399" />
+      <stop offset="80%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#064e3b" />
+    </radialGradient>
+    <filter id="ballGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#34d399" flood-opacity="0.9" />
+      <feDropShadow dx="0" dy="0" stdDeviation="15" flood-color="#10b981" flood-opacity="0.4" />
+    </filter>
+    <filter id="redBlockGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#ef4444" flood-opacity="0.9" />
+    </filter>
+  </defs>
+
+  <!-- Sky -->
+  <rect width="400" height="250" fill="url(#slopeSky)" />
+
+  <!-- Grid Perspective Lines -->
+  <g stroke="#1e293b" stroke-width="1" opacity="0.4">
+    <line x1="200" y1="60" x2="-50" y2="250" />
+    <line x1="200" y1="60" x2="20" y2="250" />
+    <line x1="200" y1="60" x2="100" y2="250" />
+    <line x1="200" y1="60" x2="180" y2="250" />
+    <line x1="200" y1="60" x2="220" y2="250" />
+    <line x1="200" y1="60" x2="300" y2="250" />
+    <line x1="200" y1="60" x2="380" y2="250" />
+    <line x1="200" y1="60" x2="450" y2="250" />
+  </g>
+
+  <!-- Rolling 3D Slope Track -->
+  <polygon points="180,75 220,75 350,250 50,250" fill="#091815" stroke="#10b981" stroke-width="2" />
+  
+  <!-- Track Lateral Lines -->
+  <path d="M 170 90 L 230 90" stroke="#34d399" stroke-width="1.5" opacity="0.6" />
+  <path d="M 155 110 L 245 110" stroke="#34d399" stroke-width="1.5" opacity="0.7" />
+  <path d="M 135 135 L 265 135" stroke="#34d399" stroke-width="2" opacity="0.8" />
+  <path d="M 110 165 L 290 165" stroke="#34d399" stroke-width="2.5" opacity="0.9" />
+  <path d="M 80 205 L 320 205" stroke="#10b981" stroke-width="3" />
+
+  <!-- Obstacle Red Cubes -->
+  <!-- Far obstacle -->
+  <polygon points="215,95 230,95 228,110 213,110" fill="#dc2626" filter="url(#redBlockGlow)" />
+  <!-- Mid obstacle -->
+  <polygon points="135,135 160,135 155,160 130,160" fill="#ef4444" stroke="#f87171" stroke-width="1" filter="url(#redBlockGlow)" />
+
+  <!-- Speed Motion Streaks -->
+  <line x1="185" y1="130" x2="185" y2="155" stroke="#6ee7b7" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.7" />
+  <line x1="215" y1="125" x2="215" y2="150" stroke="#6ee7b7" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.7" />
+
+  <!-- Glowing Green Rolling Sphere -->
+  <circle cx="200" cy="170" r="24" fill="url(#neonBall)" filter="url(#ballGlow)" />
+  <ellipse cx="193" cy="162" rx="7" ry="5" fill="#ffffff" opacity="0.6" />
+
+  <!-- Track Glow Edges -->
+  <line x1="180" y1="75" x2="50" y2="250" stroke="#34d399" stroke-width="3" />
+  <line x1="220" y1="75" x2="350" y2="250" stroke="#34d399" stroke-width="3" />
+
+  <!-- Title Badge -->
+  <rect x="14" y="14" width="76" height="26" rx="6" fill="#020617" fill-opacity="0.8" stroke="#10b981" stroke-width="1.5" />
+  <text x="52" y="32" fill="#10b981" font-size="14" font-family="system-ui, sans-serif" font-weight="900" text-anchor="middle" letter-spacing="1.5">SLOPE</text>
+  
+  <rect x="300" y="14" width="86" height="22" rx="4" fill="#059669" fill-opacity="0.25" stroke="#10b981" stroke-width="1" />
+  <text x="343" y="29" fill="#34d399" font-size="10" font-family="system-ui, sans-serif" font-weight="bold" text-anchor="middle">REAL 3D</text>
+</svg>

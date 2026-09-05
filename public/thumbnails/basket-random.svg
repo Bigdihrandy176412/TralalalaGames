@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="60%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+    <linearGradient id="floorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#b45309" />
+      <stop offset="100%" stop-color="#78350f" />
+    </linearGradient>
+    <radialGradient id="ballGrad" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#fb923c" />
+      <stop offset="50%" stop-color="#ea580c" />
+      <stop offset="100%" stop-color="#9a3412" />
+    </radialGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#f97316" flood-opacity="0.8"/>
+    </filter>
+  </defs>
+
+  <!-- Background Court -->
+  <rect width="400" height="250" fill="url(#bgGrad)" />
+  
+  <!-- Crowd Silhouettes -->
+  <path d="M 0 160 Q 40 150 80 160 T 160 155 T 240 160 T 320 155 T 400 160 L 400 180 L 0 180 Z" fill="#090d16" opacity="0.6" />
+  <circle cx="35" cy="150" r="8" fill="#090d16" opacity="0.6" />
+  <circle cx="65" cy="148" r="9" fill="#090d16" opacity="0.6" />
+  <circle cx="120" cy="145" r="8" fill="#090d16" opacity="0.6" />
+  <circle cx="280" cy="147" r="9" fill="#090d16" opacity="0.6" />
+  <circle cx="340" cy="146" r="8" fill="#090d16" opacity="0.6" />
+  <circle cx="370" cy="152" r="7" fill="#090d16" opacity="0.6" />
+
+  <!-- Hardwood Court Floor -->
+  <rect x="0" y="180" width="400" height="70" fill="url(#floorGrad)" />
+  <line x1="0" y1="180" x2="400" y2="180" stroke="#f59e0b" stroke-width="3" />
+  <!-- Court Key & Free Throw Arc -->
+  <ellipse cx="200" cy="180" rx="45" ry="12" fill="none" stroke="#fcd34d" stroke-width="2" opacity="0.7" />
+  <line x1="200" y1="180" x2="200" y2="250" stroke="#fcd34d" stroke-width="2" opacity="0.7" />
+
+  <!-- Left Basketball Hoop -->
+  <line x1="25" y1="180" x2="25" y2="70" stroke="#64748b" stroke-width="5" />
+  <rect x="25" y="70" width="8" height="50" fill="#f8fafc" stroke="#dc2626" stroke-width="2" />
+  <rect x="29" y="85" width="4" height="20" fill="none" stroke="#dc2626" stroke-width="1.5" />
+  <line x1="33" y1="105" x2="55" y2="105" stroke="#ea580c" stroke-width="3" />
+  <!-- Left Net -->
+  <path d="M 35 105 L 42 125 L 53 105 Z" fill="none" stroke="#f8fafc" stroke-width="1.5" stroke-dasharray="3,2" />
+
+  <!-- Right Basketball Hoop -->
+  <line x1="375" y1="180" x2="375" y2="70" stroke="#64748b" stroke-width="5" />
+  <rect x="367" y="70" width="8" height="50" fill="#f8fafc" stroke="#2563eb" stroke-width="2" />
+  <rect x="367" y="85" width="4" height="20" fill="none" stroke="#2563eb" stroke-width="1.5" />
+  <line x1="345" y1="105" x2="367" y2="105" stroke="#ea580c" stroke-width="3" />
+  <!-- Right Net -->
+  <path d="M 347 105 L 358 125 L 365 105 Z" fill="none" stroke="#f8fafc" stroke-width="1.5" stroke-dasharray="3,2" />
+
+  <!-- Team Red Ragdoll Players (Left) -->
+  <!-- Player 1: Dunking in the air, leaning back, long arm reaching for ball -->
+  <g transform="translate(145, 110) rotate(-22)">
+    <!-- Shadow -->
+    <ellipse cx="0" cy="70" rx="14" ry="4" fill="#000" opacity="0.3" />
+    <!-- Legs in ragdoll splay -->
+    <line x1="-5" y1="20" x2="-18" y2="45" stroke="#dc2626" stroke-width="7" stroke-linecap="round" />
+    <line x1="5" y1="20" x2="12" y2="52" stroke="#dc2626" stroke-width="7" stroke-linecap="round" />
+    <!-- Torso (Red Jersey with #7) -->
+    <rect x="-10" y="-12" width="20" height="32" rx="4" fill="#dc2626" stroke="#991b1b" stroke-width="1.5" />
+    <text x="0" y="8" fill="#fff" font-family="Arial, sans-serif" font-weight="900" font-size="12" text-anchor="middle">7</text>
+    <!-- Head with headband -->
+    <circle cx="0" cy="-22" r="11" fill="#fbcfe8" stroke="#be185d" stroke-width="1.5" />
+    <rect x="-10" y="-28" width="20" height="5" rx="2" fill="#ef4444" />
+    <!-- Eyes -->
+    <circle cx="-3" cy="-21" r="2" fill="#1e1b4b" />
+    <circle cx="4" cy="-21" r="2" fill="#1e1b4b" />
+    <!-- Arms stretched up & swinging to dunk -->
+    <line x1="-8" y1="-8" x2="-22" y2="-32" stroke="#fbcfe8" stroke-width="6" stroke-linecap="round" />
+    <line x1="8" y1="-8" x2="28" y2="-36" stroke="#fbcfe8" stroke-width="6" stroke-linecap="round" />
+    <!-- Hand with wristband -->
+    <rect x="25" y="-38" width="5" height="5" fill="#ef4444" rx="1" />
+  </g>
+
+  <!-- Player 2: Red Teammate flopping on floor trying to jump -->
+  <g transform="translate(85, 155) rotate(18)">
+    <line x1="-4" y1="12" x2="-14" y2="28" stroke="#dc2626" stroke-width="6" stroke-linecap="round" />
+    <line x1="4" y1="12" x2="16" y2="26" stroke="#dc2626" stroke-width="6" stroke-linecap="round" />
+    <rect x="-9" y="-8" width="18" height="24" rx="3" fill="#dc2626" />
+    <circle cx="0" cy="-17" r="9" fill="#fbcfe8" />
+    <line x1="-6" y1="-5" x2="-18" y2="-18" stroke="#fbcfe8" stroke-width="5" stroke-linecap="round" />
+    <line x1="6" y1="-5" x2="18" y2="-20" stroke="#fbcfe8" stroke-width="5" stroke-linecap="round" />
+  </g>
+
+  <!-- Team Blue Ragdoll Players (Right) -->
+  <!-- Player 1: Jumping defender trying to block -->
+  <g transform="translate(240, 115) rotate(15)">
+    <line x1="-5" y1="18" x2="-12" y2="48" stroke="#2563eb" stroke-width="7" stroke-linecap="round" />
+    <line x1="5" y1="18" x2="16" y2="46" stroke="#2563eb" stroke-width="7" stroke-linecap="round" />
+    <rect x="-10" y="-12" width="20" height="32" rx="4" fill="#2563eb" stroke="#1e40af" stroke-width="1.5" />
+    <text x="0" y="8" fill="#fff" font-family="Arial, sans-serif" font-weight="900" font-size="12" text-anchor="middle">3</text>
+    <circle cx="0" cy="-22" r="11" fill="#fed7aa" stroke="#c2410c" stroke-width="1.5" />
+    <rect x="-10" y="-28" width="20" height="5" rx="2" fill="#3b82f6" />
+    <circle cx="-4" cy="-21" r="2" fill="#1e1b4b" />
+    <circle cx="3" cy="-21" r="2" fill="#1e1b4b" />
+    <!-- Arms reaching desperately up -->
+    <line x1="-8" y1="-8" x2="-26" y2="-38" stroke="#fed7aa" stroke-width="6" stroke-linecap="round" />
+    <line x1="8" y1="-8" x2="16" y2="-35" stroke="#fed7aa" stroke-width="6" stroke-linecap="round" />
+  </g>
+
+  <!-- Basketball with Motion Lines & Glow -->
+  <g transform="translate(198, 65)">
+    <!-- Glow -->
+    <circle cx="0" cy="0" r="18" fill="#ea580c" opacity="0.3" filter="url(#glow)" />
+    <!-- Ball body -->
+    <circle cx="0" cy="0" r="14" fill="url(#ballGrad)" stroke="#7c2d12" stroke-width="1.5" />
+    <!-- Basketball rib lines -->
+    <path d="M -14 0 Q 0 -6 14 0" fill="none" stroke="#431407" stroke-width="1.5" />
+    <path d="M -14 0 Q 0 6 14 0" fill="none" stroke="#431407" stroke-width="1.5" />
+    <line x1="0" y1="-14" x2="0" y2="14" stroke="#431407" stroke-width="1.5" />
+    <!-- Action sparks -->
+    <path d="M 16 -10 L 24 -16" stroke="#facc15" stroke-width="2" stroke-linecap="round" />
+    <path d="M 18 5 L 26 7" stroke="#facc15" stroke-width="2" stroke-linecap="round" />
+  </g>
+
+  <!-- Score Board HUD -->
+  <g transform="translate(200, 24)">
+    <rect x="-65" y="-14" width="130" height="28" rx="6" fill="#090d16" stroke="#475569" stroke-width="1.5" />
+    <rect x="-55" y="-9" width="30" height="18" rx="3" fill="#dc2626" />
+    <text x="-40" y="4" fill="#fff" font-family="monospace" font-weight="900" font-size="14" text-anchor="middle">4</text>
+    <text x="0" y="4" fill="#94a3b8" font-family="sans-serif" font-weight="900" font-size="12" text-anchor="middle">VS</text>
+    <rect x="25" y="-9" width="30" height="18" rx="3" fill="#2563eb" />
+    <text x="40" y="4" fill="#fff" font-family="monospace" font-weight="900" font-size="14" text-anchor="middle">3</text>
+  </g>
+
+  <!-- Top Badge -->
+  <text x="20" y="30" fill="#f97316" font-family="Impact, sans-serif" font-size="18" letter-spacing="1">BASKET RANDOM</text>
+</svg>

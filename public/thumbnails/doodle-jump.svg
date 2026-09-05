@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250" width="100%" height="100%">
+  <defs>
+    <linearGradient id="skyJump" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="40%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#312e81" />
+    </linearGradient>
+    <filter id="doodleGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Sky Canvas with Stars -->
+  <rect width="400" height="250" fill="url(#skyJump)" />
+
+  <!-- Stars -->
+  <circle cx="50" cy="30" r="1.5" fill="#fef08a" />
+  <circle cx="120" cy="70" r="1" fill="#fff" />
+  <circle cx="280" cy="25" r="1.5" fill="#fff" />
+  <circle cx="350" cy="80" r="1.2" fill="#fef08a" />
+  <circle cx="80" cy="180" r="1" fill="#fff" />
+  <circle cx="330" cy="190" r="1" fill="#fff" />
+
+  <!-- Platforms -->
+  <!-- Platform 1 (Bottom right) -->
+  <g filter="url(#doodleGlow)">
+    <rect x="230" y="215" width="70" height="14" rx="7" fill="#22c55e" stroke="#16a34a" stroke-width="2" />
+    <line x1="240" y1="222" x2="290" y2="222" stroke="#86efac" stroke-width="2" stroke-linecap="round" />
+  </g>
+
+  <!-- Platform 2 (Bottom left) -->
+  <g filter="url(#doodleGlow)">
+    <rect x="90" y="180" width="75" height="14" rx="7" fill="#22c55e" stroke="#16a34a" stroke-width="2" />
+    <line x1="100" y1="187" x2="155" y2="187" stroke="#86efac" stroke-width="2" stroke-linecap="round" />
+  </g>
+
+  <!-- Platform 3 (Middle bouncy platform with spring!) -->
+  <g filter="url(#doodleGlow)">
+    <rect x="165" y="130" width="80" height="14" rx="7" fill="#22c55e" stroke="#16a34a" stroke-width="2" />
+    <line x1="175" y1="137" x2="235" y2="137" stroke="#86efac" stroke-width="2" stroke-linecap="round" />
+    <!-- Spring coil on platform -->
+    <path d="M 205 130 Q 200 124 205 118 Q 210 112 205 106" fill="none" stroke="#f59e0b" stroke-width="2.5" />
+    <rect x="200" y="103" width="10" height="4" rx="1" fill="#ea580c" />
+  </g>
+
+  <!-- Platform 4 (Higher left) -->
+  <g filter="url(#doodleGlow)">
+    <rect x="70" y="75" width="70" height="14" rx="7" fill="#22c55e" stroke="#16a34a" stroke-width="2" />
+    <line x1="80" y1="82" x2="130" y2="82" stroke="#86efac" stroke-width="2" stroke-linecap="round" />
+  </g>
+
+  <!-- Platform 5 (High right) -->
+  <g filter="url(#doodleGlow)">
+    <rect x="250" y="50" width="75" height="14" rx="7" fill="#3b82f6" stroke="#2563eb" stroke-width="2" /> <!-- Moving blue platform -->
+    <line x1="260" y1="57" x2="315" y2="57" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" />
+  </g>
+
+  <!-- Cute Jumper Character (Bouncing upwards in mid-air) -->
+  <g transform="translate(205, 55)" filter="url(#doodleGlow)">
+    <!-- Motion whoosh lines under jumper -->
+    <line x1="-12" y1="35" x2="-16" y2="50" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" opacity="0.7" />
+    <line x1="0" y1="38" x2="0" y2="55" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" opacity="0.9" />
+    <line x1="12" y1="35" x2="16" y2="50" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" opacity="0.7" />
+
+    <!-- Cute Body -->
+    <ellipse cx="0" cy="10" rx="22" ry="24" fill="#a3e635" stroke="#4d7c0f" stroke-width="2.5" />
+    <!-- Cheeks -->
+    <circle cx="-12" cy="14" r="3.5" fill="#f472b6" opacity="0.7" />
+    <circle cx="12" cy="14" r="3.5" fill="#f472b6" opacity="0.7" />
+    <!-- Big cute eyes -->
+    <circle cx="-8" cy="6" r="5" fill="#ffffff" stroke="#1e293b" stroke-width="1.5" />
+    <circle cx="-7" cy="5" r="2.5" fill="#0f172a" />
+    <circle cx="8" cy="6" r="5" fill="#ffffff" stroke="#1e293b" stroke-width="1.5" />
+    <circle cx="9" cy="5" r="2.5" fill="#0f172a" />
+    <!-- Snout / Nose -->
+    <ellipse cx="0" cy="15" rx="4" ry="3" fill="#65a30d" />
+    <!-- Cute Feet -->
+    <ellipse cx="-12" cy="32" rx="7" ry="5" fill="#65a30d" stroke="#365314" stroke-width="1.5" />
+    <ellipse cx="12" cy="32" rx="7" ry="5" fill="#65a30d" stroke="#365314" stroke-width="1.5" />
+  </g>
+
+  <!-- HUD: Altitude / Score -->
+  <rect x="20" y="20" width="110" height="30" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
+  <text x="30" y="40" fill="#a3e635" font-family="monospace" font-size="13" font-weight="900">ALT: 4,820m</text>
+</svg>

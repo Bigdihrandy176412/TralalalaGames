@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cosmic Defender</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: #030712;
+      color: #fff;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 12px;
+    }
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 440px;
+      margin-bottom: 10px;
+      font-weight: 700;
+      color: #a855f7;
+      text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+    }
+    .wrap {
+      position: relative;
+      border: 2px solid #a855f7;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+    }
+    canvas { display: block; background: #05050f; }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.88);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+    .btn {
+      background: #a855f7;
+      color: #030712;
+      border: none;
+      padding: 10px 24px;
+      font-weight: 800;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .hint { margin-top: 10px; color: #94a3b8; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div>SCORE: <span id="score">0</span></div>
+    <div>SHIPS: <span id="lives">3</span></div>
+  </div>
+  <div class="wrap">
+    <canvas id="canvas" width="400" height="500"></canvas>
+    <div class="overlay" id="overlay">
+      <h2 id="ovTitle" style="font-size: 2rem; color: #a855f7;">COSMIC DEFENDER</h2>
+      <p id="ovSub" style="color: #cbd5e1;">A/D to move, Space to fire</p>
+      <button class="btn" onclick="start()">LAUNCH</button>
+    </div>
+  </div>
+  <div class="hint">Use A/D or Arrow keys to steer, Spacebar to fire lasers</div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const livesEl = document.getElementById('lives');
+    const overlay = document.getElementById('overlay');
+    const ovTitle = document.getElementById('ovTitle');
+    const ovSub = document.getElementById('ovSub');
+
+    let player = { x: 180, y: 450, w: 28, h: 28, speed: 5.5 };
+    let bullets = [];
+    let enemies = [];
+    let stars = [];
+    let keys = {};
+    let score = 0;
+    let lives = 3;
+    let running = false;
+    let enemySpawnTimer = 0;
+
+    for (let i = 0; i < 60; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        s: Math.random() * 2 + 0.5,
+        speed: Math.random() * 1.5 + 0.5
+      });
+    }
+
+    function start() {
+      score = 0;
+      lives = 3;
+      scoreEl.textContent = 0;
+      livesEl.textContent = 3;
+      bullets = [];
+      enemies = [];
+      player.x = canvas.width / 2 - player.w / 2;
+      running = true;
+      overlay.classList.remove('show');
+    }
+
+    function spawnEnemy() {
+      enemies.push({
+        x: Math.random() * (canvas.width - 30),
+        y: -30,
+        w: 26,
+        h: 22,
+        speed: Math.random() * 1.8 + 1.5,
+        hp: 1
+      });
+    }
+
+    function update() {
+      // Stars background
+      stars.forEach(st => {
+        st.y += st.speed;
+        if (st.y > canvas.height) {
+          st.y = 0;
+          st.x = Math.random() * canvas.width;
+        }
+      });
+
+      if (!running) return;
+
+      // Player Movement
+      if ((keys['ArrowLeft'] || keys['KeyA']) && player.x > 5) player.x -= player.speed;
+      if ((keys['ArrowRight'] || keys['KeyD']) && player.x < canvas.width - player.w - 5) player.x += player.speed;
+
+      // Bullets
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        bullets[i].y -= 9;
+        if (bullets[i].y < -10) bullets.splice(i, 1);
+      }
+
+      // Enemies
+      enemySpawnTimer++;
+      if (enemySpawnTimer % 45 === 0) spawnEnemy();
+
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        let e = enemies[i];
+        e.y += e.speed;
+
+        // Collision with bullets
+        for (let j = bullets.length - 1; j >= 0; j--) {
+          let b = bullets[j];
+          if (b.x > e.x && b.x < e.x + e.w && b.y > e.y && b.y < e.y + e.h) {
+            bullets.splice(j, 1);
+            enemies.splice(i, 1);
+            score += 20;
+            scoreEl.textContent = score;
+            break;
+          }
+        }
+
+        // Collision with player
+        if (e && player.x < e.x + e.w && player.x + player.w > e.x && player.y < e.y + e.h && player.y + player.h > e.y) {
+          enemies.splice(i, 1);
+          lives--;
+          livesEl.textContent = lives;
+          if (lives <= 0) {
+            running = false;
+            ovTitle.textContent = "SHIP DESTROYED";
+            ovSub.textContent = "Final Score: " + score;
+            overlay.classList.add('show');
+          }
+        }
+
+        if (e && e.y > canvas.height) enemies.splice(i, 1);
+      }
+    }
+
+    function draw() {
+      ctx.fillStyle = '#05050f';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Stars
+      ctx.fillStyle = '#ffffff';
+      stars.forEach(st => {
+        ctx.fillRect(st.x, st.y, st.s, st.s);
+      });
+
+      if (!running) return;
+
+      // Bullets
+      ctx.fillStyle = '#38bdf8';
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 8;
+      bullets.forEach(b => {
+        ctx.fillRect(b.x - 2, b.y, 4, 12);
+      });
+
+      // Enemies
+      ctx.fillStyle = '#ef4444';
+      ctx.shadowColor = '#ef4444';
+      ctx.shadowBlur = 8;
+      enemies.forEach(e => {
+        ctx.beginPath();
+        ctx.moveTo(e.x + e.w / 2, e.y + e.h);
+        ctx.lineTo(e.x, e.y);
+        ctx.lineTo(e.x + e.w, e.y);
+        ctx.closePath();
+        ctx.fill();
+      });
+
+      // Player Ship
+      ctx.fillStyle = '#a855f7';
+      ctx.shadowColor = '#a855f7';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.moveTo(player.x + player.w / 2, player.y);
+      ctx.lineTo(player.x, player.y + player.h);
+      ctx.lineTo(player.x + player.w, player.y + player.h);
+      ctx.closePath();
+      ctx.fill();
+
+      // Wing thrusters
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(player.x + 3, player.y + player.h - 2, 5, 6);
+      ctx.fillRect(player.x + player.w - 8, player.y + player.h - 2, 5, 6);
+
+      ctx.shadowBlur = 0;
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    window.addEventListener('keydown', e => {
+      keys[e.code] = true;
+      if (e.code === 'Space' && running) {
+        e.preventDefault();
+        bullets.push({ x: player.x + player.w / 2, y: player.y });
+      }
+    });
+
+    window.addEventListener('keyup', e => {
+      keys[e.code] = false;
+    });
+
+    overlay.classList.add('show');
+    loop();
+  </script>
+</body>
+</html>

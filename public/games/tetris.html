@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Block Stacker - Unblocked</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: #090d16;
+      color: #f8fafc;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+      padding: 8px;
+    }
+    .game-layout {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      max-width: 500px;
+      width: 100%;
+      justify-content: center;
+    }
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 90px;
+    }
+    .panel-box {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+    }
+    .panel-title {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .panel-value {
+      font-family: monospace;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #38bdf8;
+    }
+    .preview-canvas {
+      width: 70px;
+      height: 70px;
+      background: #020617;
+      border-radius: 6px;
+      display: block;
+      margin: 0 auto;
+    }
+    .main-board-container {
+      position: relative;
+      background: #020617;
+      border: 2px solid #334155;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+    }
+    #board {
+      display: block;
+      background: #030712;
+    }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .hidden { display: none !important; }
+    .btn {
+      background: #10b981;
+      color: #030712;
+      border: none;
+      padding: 10px 24px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: #34d399; transform: scale(1.03); }
+    .touch-controls {
+      display: none;
+      width: 100%;
+      max-width: 440px;
+      margin-top: 10px;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 8px;
+    }
+    @media (pointer: coarse), (max-width: 600px) {
+      .touch-controls { display: flex; }
+    }
+    .touch-btn {
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 10px 14px;
+      touch-action: manipulation;
+      cursor: pointer;
+    }
+    .touch-btn:active { background: #334155; }
+  </style>
+</head>
+<body>
+
+  <div class="game-layout">
+    <!-- Left Panel -->
+    <div class="panel">
+      <div class="panel-box">
+        <div class="panel-title">Hold (C)</div>
+        <canvas id="holdCanvas" class="preview-canvas" width="70" height="70"></canvas>
+      </div>
+      <div class="panel-box">
+        <div class="panel-title">Score</div>
+        <div id="scoreVal" class="panel-value">0</div>
+      </div>
+      <div class="panel-box">
+        <div class="panel-title">Level</div>
+        <div id="levelVal" class="panel-value" style="color: #facc15;">1</div>
+      </div>
+    </div>
+
+    <!-- Center Board -->
+    <div class="main-board-container">
+      <canvas id="board" width="220" height="440"></canvas>
+
+      <div id="startOverlay" class="overlay">
+        <h2 style="font-size: 1.6rem; color: #38bdf8; font-weight: 900;">BLOCK STACKER</h2>
+        <p style="font-size: 0.8rem; color: #94a3b8; max-width: 180px;">Clear lines, stack high, and beat your record!</p>
+        <button id="startBtn" class="btn">PLAY NOW</button>
+      </div>
+
+      <div id="gameOverOverlay" class="overlay hidden">
+        <h2 style="font-size: 1.5rem; color: #ef4444; font-weight: 900;">GAME OVER</h2>
+        <div style="font-size: 0.85rem; color: #94a3b8;">Final Score</div>
+        <div id="finalScore" style="font-size: 1.5rem; color: #facc15; font-weight: 900;">0</div>
+        <button id="restartBtn" class="btn">TRY AGAIN</button>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="panel">
+      <div class="panel-box">
+        <div class="panel-title">Next</div>
+        <canvas id="nextCanvas" class="preview-canvas" width="70" height="70"></canvas>
+      </div>
+      <div class="panel-box">
+        <div class="panel-title">Lines</div>
+        <div id="linesVal" class="panel-value" style="color: #10b981;">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Touch Bar -->
+  <div class="touch-controls">
+    <button class="touch-btn" id="btnLeft">◀</button>
+    <button class="touch-btn" id="btnDown">▼</button>
+    <button class="touch-btn" id="btnRight">▶</button>
+    <button class="touch-btn" id="btnRotate" style="background: #0284c7;">↻</button>
+    <button class="touch-btn" id="btnDrop" style="background: #059669;">⚡</button>
+    <button class="touch-btn" id="btnHold" style="background: #6366f1;">H</button>
+  </div>
+
+  <script>
+    const COLS = 10;
+    const ROWS = 20;
+    const BLOCK_SIZE = 22;
+
+    const boardCanvas = document.getElementById('board');
+    const ctx = boardCanvas.getContext('2d');
+    const nextCanvas = document.getElementById('nextCanvas');
+    const nextCtx = nextCanvas.getContext('2d');
+    const holdCanvas = document.getElementById('holdCanvas');
+    const holdCtx = holdCanvas.getContext('2d');
+
+    const scoreVal = document.getElementById('scoreVal');
+    const levelVal = document.getElementById('levelVal');
+    const linesVal = document.getElementById('linesVal');
+    const finalScore = document.getElementById('finalScore');
+    const startOverlay = document.getElementById('startOverlay');
+    const gameOverOverlay = document.getElementById('gameOverOverlay');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+
+    // Audio SFX synthesized via Web Audio API
+    let audioCtx = null;
+    function playBeep(freq, type = 'sine', duration = 0.08) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    const COLORS = [
+      null,
+      '#06b6d4', // 1: I (Cyan)
+      '#3b82f6', // 2: J (Blue)
+      '#f97316', // 3: L (Orange)
+      '#eab308', // 4: O (Yellow)
+      '#22c55e', // 5: S (Green)
+      '#a855f7', // 6: T (Purple)
+      '#ef4444'  // 7: Z (Red)
+    ];
+
+    const SHAPES = [
+      [],
+      [[0,0,0,0], [1,1,1,1], [0,0,0,0], [0,0,0,0]], // I
+      [[2,0,0], [2,2,2], [0,0,0]],                   // J
+      [[0,0,3], [3,3,3], [0,0,0]],                   // L
+      [[4,4], [4,4]],                               // O
+      [[0,5,5], [5,5,0], [0,0,0]],                   // S
+      [[0,6,0], [6,6,6], [0,0,0]],                   // T
+      [[7,7,0], [0,7,7], [0,0,0]]                    // Z
+    ];
+
+    let grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+    let score = 0;
+    let lines = 0;
+    let level = 1;
+    let gameOver = false;
+    let isPaused = false;
+    let currentPiece = null;
+    let nextPieceType = null;
+    let holdPieceType = null;
+    let canHold = true;
+    let dropInterval = 800;
+    let lastDropTime = 0;
+    let animFrame = null;
+
+    function randomPieceType() {
+      return Math.floor(Math.random() * 7) + 1;
+    }
+
+    function spawnPiece(type) {
+      const shape = SHAPES[type].map(row => [...row]);
+      return {
+        type,
+        shape,
+        x: Math.floor((COLS - shape[0].length) / 2),
+        y: 0
+      };
+    }
+
+    function collide(grid, piece, offsetX = 0, offsetY = 0, testShape = null) {
+      const shape = testShape || piece.shape;
+      for (let r = 0; r < shape.length; r++) {
+        for (let c = 0; c < shape[r].length; c++) {
+          if (shape[r][c] !== 0) {
+            const newX = piece.x + c + offsetX;
+            const newY = piece.y + r + offsetY;
+            if (newX < 0 || newX >= COLS || newY >= ROWS) return true;
+            if (newY >= 0 && grid[newY][newX] !== 0) return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    function rotate(shape) {
+      const N = shape.length;
+      const result = Array.from({ length: N }, () => Array(N).fill(0));
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          result[c][N - 1 - r] = shape[r][c];
+        }
+      }
+      return result;
+    }
+
+    function merge(grid, piece) {
+      for (let r = 0; r < piece.shape.length; r++) {
+        for (let c = 0; c < piece.shape[r].length; c++) {
+          if (piece.shape[r][c] !== 0) {
+            const targetY = piece.y + r;
+            if (targetY >= 0) {
+              grid[targetY][piece.x + c] = piece.type;
+            }
+          }
+        }
+      }
+    }
+
+    function clearLines() {
+      let cleared = 0;
+      for (let r = ROWS - 1; r >= 0; r--) {
+        if (grid[r].every(cell => cell !== 0)) {
+          grid.splice(r, 1);
+          grid.unshift(Array(COLS).fill(0));
+          cleared++;
+          r++; // recheck same row
+        }
+      }
+      if (cleared > 0) {
+        lines += cleared;
+        const lineScores = [0, 100, 300, 500, 800];
+        score += (lineScores[cleared] || 1000) * level;
+        level = Math.floor(lines / 10) + 1;
+        dropInterval = Math.max(120, 800 - (level - 1) * 70);
+
+        scoreVal.innerText = score;
+        linesVal.innerText = lines;
+        levelVal.innerText = level;
+        playBeep(520, 'triangle', 0.15);
+      }
+    }
+
+    function drawBlock(c, x, y, colorCode, size = BLOCK_SIZE) {
+      const color = COLORS[colorCode];
+      c.fillStyle = color;
+      c.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+
+      // 3D Bevel highlight
+      c.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      c.fillRect(x * size + 1, y * size + 1, size - 2, 2);
+      c.fillRect(x * size + 1, y * size + 1, 2, size - 2);
+
+      c.fillStyle = 'rgba(0, 0, 0, 0.25)';
+      c.fillRect(x * size + 1, y * size + size - 3, size - 2, 2);
+      c.fillRect(x * size + size - 3, y * size + 1, 2, size - 2);
+    }
+
+    function drawPreview(c, type) {
+      c.clearRect(0, 0, 70, 70);
+      if (!type) return;
+      const shape = SHAPES[type];
+      const size = 14;
+      const offsetX = (70 - shape[0].length * size) / 2;
+      const offsetY = (70 - shape.length * size) / 2;
+      for (let r = 0; r < shape.length; r++) {
+        for (let col = 0; col < shape[r].length; col++) {
+          if (shape[r][col] !== 0) {
+            c.fillStyle = COLORS[type];
+            c.fillRect(offsetX + col * size + 1, offsetY + r * size + 1, size - 2, size - 2);
+          }
+        }
+      }
+    }
+
+    function draw() {
+      // Clear board
+      ctx.fillStyle = '#030712';
+      ctx.fillRect(0, 0, boardCanvas.width, boardCanvas.height);
+
+      // Draw grid blocks
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (grid[r][c] !== 0) {
+            drawBlock(ctx, c, r, grid[r][c]);
+          }
+        }
+      }
+
+      // Draw Ghost Piece
+      if (currentPiece) {
+        let ghostY = 0;
+        while (!collide(grid, currentPiece, 0, ghostY + 1)) {
+          ghostY++;
+        }
+        for (let r = 0; r < currentPiece.shape.length; r++) {
+          for (let c = 0; c < currentPiece.shape[r].length; c++) {
+            if (currentPiece.shape[r][c] !== 0) {
+              const gx = currentPiece.x + c;
+              const gy = currentPiece.y + r + ghostY;
+              ctx.strokeStyle = COLORS[currentPiece.type];
+              ctx.lineWidth = 1;
+              ctx.strokeRect(gx * BLOCK_SIZE + 2, gy * BLOCK_SIZE + 2, BLOCK_SIZE - 4, BLOCK_SIZE - 4);
+            }
+          }
+        }
+
+        // Draw active piece
+        for (let r = 0; r < currentPiece.shape.length; r++) {
+          for (let c = 0; c < currentPiece.shape[r].length; c++) {
+            if (currentPiece.shape[r][c] !== 0) {
+              drawBlock(ctx, currentPiece.x + c, currentPiece.y + r, currentPiece.type);
+            }
+          }
+        }
+      }
+    }
+
+    function lockPiece() {
+      merge(grid, currentPiece);
+      playBeep(220, 'square', 0.05);
+      clearLines();
+      canHold = true;
+
+      // Next piece
+      currentPiece = spawnPiece(nextPieceType);
+      nextPieceType = randomPieceType();
+      drawPreview(nextCtx, nextPieceType);
+
+      // Check game over
+      if (collide(grid, currentPiece)) {
+        gameOver = true;
+        finalScore.innerText = score;
+        gameOverOverlay.classList.remove('hidden');
+        playBeep(130, 'sawtooth', 0.3);
+      }
+    }
+
+    function hardDrop() {
+      if (gameOver || !currentPiece) return;
+      while (!collide(grid, currentPiece, 0, 1)) {
+        currentPiece.y++;
+        score += 2;
+      }
+      scoreVal.innerText = score;
+      lockPiece();
+      draw();
+    }
+
+    function hold() {
+      if (!canHold || gameOver || !currentPiece) return;
+      playBeep(330, 'sine', 0.05);
+      if (!holdPieceType) {
+        holdPieceType = currentPiece.type;
+        currentPiece = spawnPiece(nextPieceType);
+        nextPieceType = randomPieceType();
+        drawPreview(nextCtx, nextPieceType);
+      } else {
+        const temp = holdPieceType;
+        holdPieceType = currentPiece.type;
+        currentPiece = spawnPiece(temp);
+      }
+      canHold = false;
+      drawPreview(holdCtx, holdPieceType);
+      draw();
+    }
+
+    function move(dir) {
+      if (gameOver || !currentPiece) return;
+      if (!collide(grid, currentPiece, dir, 0)) {
+        currentPiece.x += dir;
+        playBeep(300, 'sine', 0.03);
+        draw();
+      }
+    }
+
+    function rotatePiece() {
+      if (gameOver || !currentPiece) return;
+      const rotated = rotate(currentPiece.shape);
+      if (!collide(grid, currentPiece, 0, 0, rotated)) {
+        currentPiece.shape = rotated;
+        playBeep(440, 'sine', 0.04);
+      } else if (!collide(grid, currentPiece, 1, 0, rotated)) {
+        currentPiece.x += 1;
+        currentPiece.shape = rotated;
+      } else if (!collide(grid, currentPiece, -1, 0, rotated)) {
+        currentPiece.x -= 1;
+        currentPiece.shape = rotated;
+      }
+      draw();
+    }
+
+    function update(time = 0) {
+      if (!gameOver) {
+        const delta = time - lastDropTime;
+        if (delta > dropInterval) {
+          if (currentPiece && !collide(grid, currentPiece, 0, 1)) {
+            currentPiece.y++;
+          } else if (currentPiece) {
+            lockPiece();
+          }
+          lastDropTime = time;
+          draw();
+        }
+      }
+      animFrame = requestAnimationFrame(update);
+    }
+
+    function startGame() {
+      grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+      score = 0;
+      lines = 0;
+      level = 1;
+      gameOver = false;
+      canHold = true;
+      holdPieceType = null;
+      scoreVal.innerText = '0';
+      levelVal.innerText = '1';
+      linesVal.innerText = '0';
+      startOverlay.classList.add('hidden');
+      gameOverOverlay.classList.add('hidden');
+
+      currentPiece = spawnPiece(randomPieceType());
+      nextPieceType = randomPieceType();
+      drawPreview(nextCtx, nextPieceType);
+      drawPreview(holdCtx, null);
+      lastDropTime = performance.now();
+      draw();
+    }
+
+    // Keyboard handlers
+    window.addEventListener('keydown', (e) => {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+        e.preventDefault();
+      }
+      if (gameOver) return;
+
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') move(-1);
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') move(1);
+      if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+        if (currentPiece && !collide(grid, currentPiece, 0, 1)) {
+          currentPiece.y++;
+          score += 1;
+          scoreVal.innerText = score;
+          draw();
+        }
+      }
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === 'x' || e.key === 'X') rotatePiece();
+      if (e.key === ' ') hardDrop();
+      if (e.key === 'c' || e.key === 'C' || e.key === 'Shift') hold();
+    });
+
+    // Touch handlers
+    document.getElementById('btnLeft').addEventListener('click', () => move(-1));
+    document.getElementById('btnRight').addEventListener('click', () => move(1));
+    document.getElementById('btnDown').addEventListener('click', () => {
+      if (currentPiece && !collide(grid, currentPiece, 0, 1)) {
+        currentPiece.y++;
+        score += 1;
+        scoreVal.innerText = score;
+        draw();
+      }
+    });
+    document.getElementById('btnRotate').addEventListener('click', rotatePiece);
+    document.getElementById('btnDrop').addEventListener('click', hardDrop);
+    document.getElementById('btnHold').addEventListener('click', hold);
+
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', startGame);
+
+    animFrame = requestAnimationFrame(update);
+  </script>
+</body>
+</html>
